@@ -343,6 +343,20 @@ body {
     height: 100%;
 }
 
+/* Mobile — cap editor height so buttons below stay visible */
+@media (max-width: 768px) {
+    .editor-container {
+        flex: none;
+        height: 300px;
+        min-height: 300px;
+        max-height: 300px;
+    }
+
+    #monacoEditor {
+        height: 300px;
+    }
+}
+
 
 /* ── Samples Bar ────────────────────────────────────────────────────────────── */
 

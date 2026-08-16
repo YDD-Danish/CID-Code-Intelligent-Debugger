@@ -24,7 +24,12 @@ def share_view(session_id):
     is_production = bool(os.environ.get("RENDER", False))
     return render_template("index.html", share_id=session_id, is_production=is_production)
 
-
+@main_bp.route("/env-check")
+def env_check():
+    """Tell frontend if we are on production."""
+    return jsonify({
+        "is_production": bool(os.environ.get("RENDER", False))
+    })
 @main_bp.route("/health")
 def health():
     """Health check — used by deployment platforms."""

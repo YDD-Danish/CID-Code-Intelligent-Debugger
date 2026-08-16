@@ -164,7 +164,12 @@ int main() {
     };
 
     // Detect production environment
-    window.isProduction = document.querySelector('meta[name="app-env"]')?.content === 'production';
+    window.isProduction = false;
+    fetch('/env-check')
+        .then(r => r.json())
+        .then(data => {
+            window.isProduction = data.is_production;
+    });
 
     // ── Initialize App ────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
