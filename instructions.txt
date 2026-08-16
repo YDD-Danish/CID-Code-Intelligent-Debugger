@@ -1,0 +1,248 @@
+═══════════════════════════════════════════════════════════════
+  C.I.D — Code Intelligent Debugger
+  Setup & Running Instructions
+  Author: Danish Khan
+═══════════════════════════════════════════════════════════════
+
+
+─── WHAT IS C.I.D? ───────────────────────────────────────────
+
+C.I.D is a web-based AI tool that helps developers:
+  • Explain code line by line in plain English
+  • Find and fix bugs automatically
+  • Analyse time/space complexity (Big O notation)
+  • Scan code for security vulnerabilities
+  • Run Python and JavaScript code in the browser
+
+It is powered by Groq AI (LLaMA 3.3 70B model) and built
+with Python Flask backend and Monaco Editor frontend.
+
+
+─── REQUIREMENTS ─────────────────────────────────────────────
+
+  • Windows 10 or 11
+  • Python 3.10 or above installed
+  • Internet connection (required for AI features)
+  • Modern browser (Chrome / Edge / Firefox)
+  • Groq API key (free from https://console.groq.com)
+
+
+─── FIRST TIME SETUP (DO THIS ONLY ONCE) ─────────────────────
+
+Step 1 — Open PowerShell
+
+  Press Windows key, type "PowerShell", click to open.
+
+
+Step 2 — Navigate to the project folder
+
+  cd "$env:USERPROFILE\C.I.D"
+
+
+Step 3 — Create virtual environment
+
+  python -m venv venv
+
+
+Step 4 — Activate virtual environment
+
+  venv\Scripts\Activate.ps1
+
+  You should see (venv) at the start of your prompt.
+
+  If you get a red error about execution policy, run this first:
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  Type Y and press Enter. Then try the activate command again.
+
+
+Step 5 — Install all dependencies
+
+  venv\Scripts\python.exe -m pip install -r requirements.txt
+
+
+Step 6 — Add your API key
+
+  Open the .env file in the C.I.D folder.
+  Find this line:
+    GROQ_API_KEY=paste_your_groq_key_here
+
+  Replace it with your real Groq API key:
+    GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+  To get a free Groq key:
+    1. Go to https://console.groq.com
+    2. Sign up with Google (free)
+    3. Click "API Keys" in left sidebar
+    4. Click "Create API Key"
+    5. Copy the key (starts with gsk_)
+    6. Paste it into the .env file
+
+  Save the .env file.
+
+
+Step 7 — Start the server
+
+  venv\Scripts\python.exe run.py
+
+
+Step 8 — Open the website
+
+  Open your browser and go to:
+    http://localhost:5000
+
+  You should see the C.I.D interface.
+
+
+─── STARTING THE SERVER (EVERY TIME AFTER SETUP) ─────────────
+
+Every time you want to use C.I.D, do these 3 steps:
+
+  1. Open PowerShell
+
+  2. Navigate and activate:
+     cd "$env:USERPROFILE\C.I.D"
+     venv\Scripts\Activate.ps1
+
+  3. Start the server:
+     venv\Scripts\python.exe run.py
+
+  4. Open browser:
+     http://localhost:5000
+
+
+─── STOPPING THE SERVER ───────────────────────────────────────
+
+  Press Ctrl + C in the PowerShell window.
+
+
+─── HOW TO USE C.I.D ─────────────────────────────────────────
+
+1. EXPLAIN MODE (💡)
+   • Paste any code into the editor
+   • Select the programming language (or leave on Auto)
+   • Click the "Explain" tab
+   • Click "Analyse Code"
+   • AI explains every line in plain English
+
+2. DEBUG MODE (🐛)
+   • Paste code that has bugs
+   • Click the "Debug" tab
+   • Click "Analyse Code"
+   • AI finds all bugs, explains why they are wrong
+   • Shows corrected code you can copy
+
+3. OPTIMIZE MODE (⚡)
+   • Paste any code
+   • Click the "Optimize" tab
+   • Click "Analyse Code"
+   • AI shows current Big O complexity
+   • Suggests faster algorithms
+   • Shows optimized code
+
+4. SECURITY MODE (🔒)
+   • Paste code you want to check for vulnerabilities
+   • Click the "Security" tab
+   • Click "Analyse Code"
+   • AI scans for SQL injection, XSS, hardcoded passwords etc.
+   • Shows risk level and secure fixes
+
+5. RUN CODE (▶)
+   • Works for Python and JavaScript only
+   • Paste code and click the green ▶ Run button
+   • Output appears in a console panel below results
+
+6. SAMPLE CODES
+   • Use the "Try a sample..." dropdown below the editor
+   • Pre-loaded examples for testing each mode
+
+7. DARK / LIGHT MODE
+   • Click the moon/sun icon in the top right
+   • Your preference is saved automatically
+
+
+─── TROUBLESHOOTING ───────────────────────────────────────────
+
+Problem: "No module named flask" or similar
+  Fix: Virtual environment not activated.
+       Run: venv\Scripts\Activate.ps1
+       Make sure (venv) shows in your prompt.
+
+Problem: "Address already in use"
+  Fix: Another instance is running.
+       Close all PowerShell windows and try again.
+       Or run: netstat -ano | findstr :5000
+       Then: taskkill /PID <number> /F
+
+Problem: "GROQ_API_KEY not found"
+  Fix: Check your .env file has the correct key.
+       Make sure there are no extra spaces.
+       Restart the server after changing .env.
+
+Problem: "Rate limit exceeded"
+  Fix: You made too many requests too fast.
+       Wait 60 seconds and try again.
+       Free tier allows 30 requests per minute.
+
+Problem: "AI analysis failed"
+  Fix: Check your internet connection.
+       Check Groq API status at https://status.groq.com
+       Try again in a few seconds.
+
+Problem: Run button says "undetected language"
+  Fix: Select Python or JavaScript from the language
+       dropdown instead of using Auto Detect.
+
+Problem: Cursor invisible in light mode
+  Fix: This was fixed in the latest version.
+       Do a hard refresh: Ctrl + Shift + R
+
+Problem: Website not loading
+  Fix: Make sure the server is running.
+       Check PowerShell shows "Running on http://..."
+       Try http://127.0.0.1:5000 instead.
+
+
+─── FILE STRUCTURE ────────────────────────────────────────────
+
+C.I.D/
+├── run.py                ← Start the server with this
+├── .env                  ← Your API key goes here
+├── requirements.txt      ← All Python packages needed
+├── instructions.txt      ← This file
+├── app/
+│   ├── __init__.py       ← App factory
+│   ├── config.py         ← Settings
+│   ├── extensions.py     ← Flask extensions
+│   ├── routes/
+│   │   ├── api.py        ← AI analysis endpoints
+│   │   ├── security.py   ← Security scanner endpoint
+│   │   ├── history.py    ← Code history endpoints
+│   │   └── main.py       ← Serves the webpage
+│   ├── services/
+│   │   ├── llm_service.py     ← Groq API calls
+│   │   ├── prompt_builder.py  ← AI prompt templates
+│   │   ├── response_parser.py ← Parses AI responses
+│   │   └── language_detector.py ← Auto language detection
+│   ├── models/
+│   │   └── code_session.py    ← Database model
+│   └── utils/
+│       ├── validators.py      ← Input validation
+│       └── rate_limiter.py    ← Rate limit helpers
+├── static/
+│   ├── css/main.css      ← All styles
+│   └── js/
+│       ├── app.js        ← Main application logic
+│       └── theme.js      ← Dark/light mode toggle
+├── templates/
+│   └── index.html        ← Main webpage
+└── database/
+    └── cid.db            ← SQLite database (auto created)
+
+
+─── TECH STACK ────────────────────────────────────────────────
+
+  Backend     Python 3.14, Flask 3.0.3
+  Frontend    HTML5, CSS3, JavaScript, Monaco Editor
+  AI          Groq API with LLaMA 3.3 70B model
+  Database    SQLite with SQLAlchemy ORM
+  Design      Glassmorphism, Dark/Light themes

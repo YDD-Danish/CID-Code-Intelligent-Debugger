@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if share_id %}
+    <meta name="cid-share-id" content="{{ share_id }}">
+    {% endif %}
+    <title>C.I.D — Code Intelligent Debugger</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Monaco Editor CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/editor/editor.main.min.css">
+
+    <!-- Our Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+    <!-- ── NAVBAR ──────────────────────────────────────────────────────── -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <button class="history-btn" id="historyBtn" title="History">
+                <span class="history-icon">☰</span>
+            </button>
+            <button class="snippets-btn" id="snippetsBtn" title="My Snippets">
+                <span class="snippets-icon">📚</span>
+            </button>
+            <div class="logo">
+                <div class="logo-wrap">
+                    <span class="logo-text">C.I.D</span>
+                    <svg class="logo-magnifier" id="logoMagnifier"
+                         viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2.2"/>
+                        <line x1="15" y1="15" x2="20" y2="20"
+                              stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-sub">Code Intelligent Debugger</span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <div class="mode-tabs glass">
+                <button class="mode-tab active" data-mode="explain">
+                    <span class="tab-icon">💡</span>
+                    <span class="tab-label">Explain</span>
+                </button>
+                <button class="mode-tab" data-mode="debug">
+                    <span class="tab-icon">🐛</span>
+                    <span class="tab-label">Debug</span>
+                </button>
+                <button class="mode-tab" data-mode="optimize">
+                    <span class="tab-icon">⚡</span>
+                    <span class="tab-label">Optimize</span>
+                </button>
+                <button class="mode-tab" data-mode="security">
+                    <span class="tab-icon">🔒</span>
+                    <span class="tab-label">Security</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <button class="new-btn" id="newSessionBtn" title="New Session (Clear All)">
+                <span class="new-icon">➕</span>
+                <span class="new-label">New</span>
+            </button>
+            <button class="run-btn glass" id="runCodeBtn" title="Run Code">
+                <span class="run-icon">▶</span>
+                <span class="run-label">Run</span>
+            </button>
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                <span class="theme-icon-dark">🌙</span>
+                <span class="theme-icon-light">☀️</span>
+            </button>
+            <button class="settings-btn" id="settingsBtn" title="Settings">
+                <span class="settings-icon">⚙</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ── MOBILE PANEL TOGGLE ──────────────────────────────────────── -->
+    <div class="mobile-toggle">
+        <button class="panel-toggle active" data-panel="code">
+            <span>Code</span>
+        </button>
+        <button class="panel-toggle" data-panel="results">
+            <span>Results</span>
+        </button>
+    </div>
+
+    <!-- ── MAIN CONTENT ──────────────────────────────────────────────── -->
+    <main class="main-content">
+
+        <!-- LEFT PANEL — Code Input -->
+        <section class="panel panel-left active" id="codePanel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="panel-dot green"></span>
+                    <span>Code Input</span>
+                </div>
+                <div class="panel-controls">
+                    <button class="format-btn" id="formatBtn" title="Format Code (AI cleanup)">
+                        <span class="format-icon">✨</span>
+                    </button>
+                    <select class="language-select" id="languageSelect">
+                        <option value="auto" selected>Auto Detect</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="csharp">C#</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="php">PHP</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="swift">Swift</option>
+                        <option value="kotlin">Kotlin</option>
+                        <option value="sql">SQL</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="bash">Bash</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Monaco Editor Container -->
+            <div class="editor-container" id="editorContainer">
+                <div id="monacoEditor"></div>
+            </div>
+
+            <!-- Editor Stats Bar -->
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <span class="stat-label">Lines</span>
+                    <span class="stat-value" id="statLines">0</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">Characters</span>
+                    <span class="stat-value" id="statChars">0</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">Words</span>
+                    <span class="stat-value" id="statWords">0</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">Language</span>
+                    <span class="stat-value" id="statLang">Auto</span>
+                </div>
+            </div>
+            <!-- Sample Code Dropdown -->
+            <div class="samples-bar">
+                <select class="sample-select glass" id="sampleSelect">
+                    <option value="">Try a sample...</option>
+                    <option value="bubble_sort">Bubble Sort (Python)</option>
+                    <option value="fetch_api">Fetch API (JavaScript)</option>
+                    <option value="sql_injection">SQL Injection (Python)</option>
+                    <option value="linked_list">Linked List (Java)</option>
+                    <option value="fibonacci">Fibonacci (C++)</option>
+                </select>
+            </div>
+
+            <!-- Analyse Button -->
+            <button class="analyse-btn glass" id="analyseBtn">
+                <span class="btn-text">Analyse Code</span>
+                <span class="btn-loader" style="display:none;">
+                    <span class="dot-pulse"></span>
+                </span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </section>
+
+        <!-- RIGHT PANEL — Results -->
+        <section class="panel panel-right" id="resultsPanel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="panel-dot blue"></span>
+                    <span>Analysis Results</span>
+                </div>
+                <div class="panel-controls">
+                    <span class="provider-badge" id="providerBadge" style="display:none;"></span>
+                    <span class="time-badge" id="timeBadge" style="display:none;"></span>
+                    <button class="icon-btn" id="chatToggleBtn" title="Ask follow-up" style="display:none;">💬</button>
+                    <button class="icon-btn" id="copyBtn" title="Copy result" style="display:none;">📋</button>
+                    <button class="icon-btn" id="exportPdfBtn" title="Export as PDF" style="display:none;">📄</button>
+                    <button class="icon-btn" id="shareBtn" title="Share link" style="display:none;">🔗</button>
+                </div>
+            </div>
+
+            <!-- Results Content -->
+            <div class="results-container" id="resultsContainer">
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">🔍</div>
+                    <h3>Paste your code and click Analyse</h3>
+                    <p>C.I.D will explain, debug, optimise, or scan your code using AI</p>
+                    <div class="empty-features">
+                        <div class="feature-chip">💡 Line-by-line explanation</div>
+                        <div class="feature-chip">🐛 Bug detection & fixes</div>
+                        <div class="feature-chip">⚡ Big O analysis</div>
+                        <div class="feature-chip">🔒 Security scanning</div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState" style="display:none;">
+                    <div class="loading-animation">
+                        <div class="loading-bar"></div>
+                    </div>
+                    <p class="loading-text">C.I.D is analysing your code<span class="loading-dots"></span></p>
+
+                    <div class="loading-steps" id="loadingSteps">
+                        <div class="loading-step" data-step="1">
+                            <span class="loading-step-icon">🔍</span>
+                            <span>Detecting language</span>
+                            <span class="loading-step-check">✓</span>
+                        </div>
+                        <div class="loading-step" data-step="2">
+                            <span class="loading-step-icon">📝</span>
+                            <span>Building AI prompt</span>
+                            <span class="loading-step-check">✓</span>
+                        </div>
+                        <div class="loading-step" data-step="3">
+                            <span class="loading-step-icon">🧠</span>
+                            <span>Waiting for AI response</span>
+                            <span class="loading-step-check">✓</span>
+                        </div>
+                        <div class="loading-step" data-step="4">
+                            <span class="loading-step-icon">⚡</span>
+                            <span>Parsing results</span>
+                            <span class="loading-step-check">✓</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div class="error-state" id="errorState" style="display:none;">
+                    <div class="error-icon">⚠️</div>
+                    <h3 id="errorTitle">Something went wrong</h3>
+                    <p id="errorMessage">Please try again.</p>
+                    <button class="retry-btn glass" id="retryBtn">Try Again</button>
+                </div>
+
+                                <!-- Results Output -->
+                <div class="results-output" id="resultsOutput" style="display:none;">
+                    <!-- Dynamic content injected by JavaScript -->
+                </div>
+
+                 <!-- Chat Interface -->
+                <div class="chat-section" id="chatSection" style="display:none;">
+                    <div class="chat-header">
+                        <span class="chat-title">💬 Ask a Follow-up</span>
+                        <button class="chat-close" id="chatClose">✕</button>
+                    </div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-wrap">
+                        <textarea
+                            class="chat-input"
+                            id="chatInput"
+                            placeholder="Ask about the code... (e.g. 'What is a set?' or 'Explain line 3')"
+                            rows="1"></textarea>
+                        <button class="chat-send" id="chatSend" title="Send">→</button>
+                    </div>
+                </div>
+
+                <!-- Run Output Panel -->
+                <div class="run-output-panel" id="runOutputPanel" style="display:none;">
+                    <div class="run-output-header">
+                        <span class="panel-dot green"></span>
+                        <span>Console Output</span>
+                        <button class="close-run-btn" id="closeRunBtn">✕</button>
+                    </div>
+                    <pre class="run-output-content" id="runOutputContent"></pre>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+    
+     <!-- ── SNIPPETS DRAWER ────────────────────────────────────────── -->
+    <div class="snippets-overlay" id="snippetsOverlay"></div>
+
+    <aside class="snippets-drawer" id="snippetsDrawer">
+        <div class="snippets-header">
+            <div class="snippets-title-wrap">
+                <span class="snippets-title-icon">📚</span>
+                <h2 class="snippets-title">My Snippets</h2>
+            </div>
+            <button class="snippets-close" id="snippetsClose">✕</button>
+        </div>
+
+        <div class="snippets-toolbar">
+            <input type="text" class="snippets-search" id="snippetsSearch"
+                   placeholder="🔍 Search snippets...">
+            <select class="snippets-category-filter" id="snippetsCategoryFilter">
+                <option value="all">All Categories</option>
+            </select>
+        </div>
+
+        <div class="snippets-actions">
+            <button class="save-current-btn" id="saveCurrentBtn">
+                💾 Save Current Code as Snippet
+            </button>
+        </div>
+
+        <div class="snippets-body" id="snippetsBody">
+            <div class="snippets-empty">
+                <div class="snippets-empty-icon">📭</div>
+                <div class="snippets-empty-text">No snippets yet</div>
+                <div class="snippets-empty-sub">Save your favorite code snippets for quick access</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── SAVE SNIPPET MODAL ─────────────────────────────────────── -->
+    <div class="save-snippet-overlay" id="saveSnippetOverlay" style="display:none;">
+        <div class="save-snippet-modal">
+            <div class="save-snippet-header">
+                <span class="save-snippet-title">💾 Save Snippet</span>
+                <button class="save-snippet-close" id="saveSnippetClose">✕</button>
+            </div>
+            <div class="save-snippet-body">
+                <div class="save-field">
+                    <label>Name *</label>
+                    <input type="text" id="snippetNameInput" placeholder="e.g. Bubble Sort" maxlength="200">
+                </div>
+                <div class="save-field">
+                    <label>Category</label>
+                    <select id="snippetCategoryInput">
+                        <option value="General">General</option>
+                        <option value="Algorithms">Algorithms</option>
+                        <option value="Data Structures">Data Structures</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Web">Web</option>
+                        <option value="Database">Database</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                <div class="save-field">
+                    <label>Description (optional)</label>
+                    <textarea id="snippetDescriptionInput" placeholder="What does this code do?"
+                              rows="3"></textarea>
+                </div>
+                <div class="save-actions">
+                    <button class="save-cancel-btn" id="saveCancelBtn">Cancel</button>
+                    <button class="save-confirm-btn" id="saveConfirmBtn">Save Snippet</button>
+                </div>
+            </div>
+        </div>
+    </div>   
+    <!-- ── HISTORY DRAWER ─────────────────────────────────────────── -->
+    <div class="history-overlay" id="historyOverlay"></div>
+
+    <aside class="history-drawer" id="historyDrawer">
+        <div class="history-header">
+            <div class="history-title-wrap">
+                <span class="history-title-icon">📜</span>
+                <h2 class="history-title">History</h2>
+            </div>
+            <button class="history-close" id="historyClose">✕</button>
+        </div>
+
+        <div class="history-filters">
+            <select class="history-filter-select" id="historyFilterMode">
+                <option value="">All Modes</option>
+                <option value="explain">Explain</option>
+                <option value="debug">Debug</option>
+                <option value="optimize">Optimize</option>
+                <option value="security">Security</option>
+            </select>
+            <button class="history-refresh" id="historyRefresh" title="Refresh">🔄</button>
+        </div>
+
+        <div class="history-body" id="historyBody">
+            <div class="history-empty">
+                <div class="history-empty-icon">📭</div>
+                <div class="history-empty-text">No history yet</div>
+                <div class="history-empty-sub">Your analyses will appear here</div>
+            </div>
+        </div>
+
+        <div class="history-footer">
+            <button class="history-clear-btn" id="historyClearAll">
+                🗑 Clear All History
+            </button>
+        </div>
+    </aside>
+
+    <!-- ── SETTINGS DRAWER ──────────────────────────────────────────── -->
+    <div class="settings-overlay" id="settingsOverlay"></div>
+
+    <aside class="settings-drawer" id="settingsDrawer">
+        <div class="settings-header">
+            <div class="settings-title-wrap">
+                <span class="settings-title-icon">⚙</span>
+                <h2 class="settings-title">Settings</h2>
+            </div>
+            <button class="settings-close" id="settingsClose">✕</button>
+        </div>
+
+        <div class="settings-body">
+
+            <!-- ── EDITOR PREFERENCES ── -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <span>📝</span> Editor Preferences
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Font Size</label>
+                    <div class="setting-control">
+                        <input type="range" class="setting-slider" id="setFontSize" min="12" max="20" step="1" value="13">
+                        <span class="slider-value" id="fontSizeValue">13px</span>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Font Family</label>
+                    <select class="setting-select" id="setFontFamily">
+                        <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                        <option value="'Fira Code', monospace">Fira Code</option>
+                        <option value="'Consolas', monospace">Consolas</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Tab Size</label>
+                    <select class="setting-select" id="setTabSize">
+                        <option value="2">2 spaces</option>
+                        <option value="4" selected>4 spaces</option>
+                        <option value="8">8 spaces</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Word Wrap</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setWordWrap" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Line Numbers</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setLineNumbers" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Minimap</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setMinimap">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── ANALYSIS PREFERENCES ── -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <span>🧠</span> Analysis Preferences
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Beginner Mode</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setBeginnerMode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Default Language</label>
+                    <select class="setting-select" id="setDefaultLanguage">
+                        <option value="auto">Auto Detect</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="csharp">C#</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Default Mode</label>
+                    <select class="setting-select" id="setDefaultMode">
+                        <option value="explain">Explain</option>
+                        <option value="debug">Debug</option>
+                        <option value="optimize">Optimize</option>
+                        <option value="security">Security</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Auto-analyse on Paste</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setAutoAnalyse">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Response Detail</label>
+                    <select class="setting-select" id="setResponseDetail">
+                        <option value="concise">Concise</option>
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="detailed">Detailed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ── APPEARANCE ── -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <span>🎨</span> Appearance
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Theme</label>
+                    <select class="setting-select" id="setTheme">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="auto">Auto (System)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Editor Theme</label>
+                    <select class="setting-select" id="setEditorTheme">
+                        <option value="cid-default">C.I.D Default</option>
+                        <option value="dracula">Dracula</option>
+                        <option value="monokai">Monokai</option>
+                        <option value="solarized-dark">Solarized Dark</option>
+                        <option value="solarized-light">Solarized Light</option>
+                        <option value="github-dark">GitHub Dark</option>
+                        <option value="github-light">GitHub Light</option>
+                        <option value="one-dark">One Dark Pro</option>
+                        <option value="tokyo-night">Tokyo Night</option>
+                        <option value="nord">Nord</option>
+                        <option value="ayu-mirage">Ayu Mirage</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Accent Color</label>
+                    <div class="accent-colors">
+                        <button class="accent-swatch active" data-color="#4F8EF7" style="background:#4F8EF7" title="Blue"></button>
+                        <button class="accent-swatch" data-color="#A78BFA" style="background:#A78BFA" title="Purple"></button>
+                        <button class="accent-swatch" data-color="#34D399" style="background:#34D399" title="Green"></button>
+                        <button class="accent-swatch" data-color="#F472B6" style="background:#F472B6" title="Pink"></button>
+                        <button class="accent-swatch" data-color="#FB923C" style="background:#FB923C" title="Orange"></button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Glass Intensity</label>
+                    <select class="setting-select" id="setGlassIntensity">
+                        <option value="none">None</option>
+                        <option value="subtle">Subtle</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="strong">Strong</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Compact Mode</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setCompactMode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <label class="setting-label">Animated Logo</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setLogoAnimation" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── BEHAVIOR ── -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <span>⚡</span> Behavior
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Save History</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setSaveHistory" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Show Response Time</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setShowTime" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Show Provider Badge</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setShowProvider" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Toast Duration</label>
+                    <select class="setting-select" id="setToastDuration">
+                        <option value="2000">2 seconds</option>
+                        <option value="3000" selected>3 seconds</option>
+                        <option value="5000">5 seconds</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Confirm Before Clearing</label>
+                    <label class="setting-toggle">
+                        <input type="checkbox" id="setConfirmClear" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ── ADVANCED ── -->
+            <div class="settings-section">
+                <div class="settings-section-title">
+                    <span>🔧</span> Advanced
+                </div>
+
+                <div class="setting-row">
+                    <label class="setting-label">Export Format</label>
+                    <select class="setting-select" id="setExportFormat">
+                        <option value="pdf" selected>PDF</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="json">JSON</option>
+                        <option value="text">Plain Text</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <button class="setting-action-btn" id="showShortcutsBtn">
+                        ⌨️ View Keyboard Shortcuts
+                    </button>
+                </div>
+
+                <div class="setting-row">
+                    <button class="setting-action-btn" id="showAboutBtn">
+                        ℹ️ About C.I.D
+                    </button>
+                </div>
+
+                <div class="setting-row">
+                    <button class="setting-action-btn danger" id="clearDataBtn">
+                        🗑 Clear All Data
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="settings-footer">
+            <button class="settings-reset" id="settingsReset">Reset to Defaults</button>
+            <span class="settings-version">C.I.D v1.0.0</span>
+        </div>
+    </aside>
+
+    <!-- ── TOAST CONTAINER ─────────────────────────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ── SCRIPTS ─────────────────────────────────────────────────── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/shortcuts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/snippets.js') }}"></script>
+    <meta name="app-env" content="{{ 'production' if is_production else 'local' }}">
+</body>
+</html>
