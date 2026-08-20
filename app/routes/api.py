@@ -939,16 +939,9 @@ def format_code():
         language = detected if detected != "unknown" else "python"
 
     prompt = (
-        "You are a code formatter. Reformat this " + language + " code "
-        "with proper indentation, spacing, and industry-standard style conventions.\n\n"
-        "RULES:\n"
-        "1. Do NOT change the logic or functionality\n"
-        "2. Do NOT add or remove any code\n"
-        "3. Only fix indentation, spacing, line breaks, and style\n"
-        "4. Return ONLY the formatted code — no explanations, no markdown\n"
-        "5. Do NOT wrap in triple backticks\n\n"
-        "CODE TO FORMAT:\n"
-        + code
+        f"Reformat this {language} code cleanly with proper indentation. "
+        f"Do NOT change logic or add explanations or markdown backticks. "
+        f"Return ONLY the raw formatted code:\n\n{code}"
     )
 
     try:

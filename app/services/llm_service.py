@@ -120,7 +120,7 @@ def _call_groq(prompt: str, api_key: str, expect_json: bool = True) -> str:
         Raw text response from the AI
 
     Raises:
-        Exception on any API error
+        Exception on any API error or rate limit
     """
 
     client = Groq(api_key=api_key)
@@ -141,23 +141,29 @@ def _call_groq(prompt: str, api_key: str, expect_json: bool = True) -> str:
         )
         temp = 0.4
 
-    response = client.chat.completions.create(
-        model    = GROQ_MODEL,
-        messages = [
-            {
-                "role":    "system",
-                "content": system_msg
-            },
-            {
-                "role":    "user",
-                "content": prompt
-            }
-        ],
-        temperature = temp,
-        max_tokens  = MAX_TOKENS,
-    )
+    try:
+        response = client.chat.completions.create(
+            model    = GROQ_MODEL,
+            messages = [
+                {
+                    "role":    "system",
+                    "content": system_msg
+                },
+                {
+                    "role":    "user",
+                    "content": prompt
+                }
+            ],
+            temperature = temp,
+            max_tokens  = MAX_TOKENS,
+        )
+        return response.choices[0].message.content
 
-    return response.choices[0].message.content
+    except Exception as e:
+        err_msg = str(e).lower()
+        if "429" in err_msg or "rate_limit" in err_msg or "rate limit" in err_msg:
+            raise Exception("Rate limit reached on Groq free tier. Please wait 10–15 seconds before trying again.")
+        raise Exception(f"Groq API error: {str(e)}")
 
 # ── Prompt Router ─────────────────────────────────────────────────────────────
 
