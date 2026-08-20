@@ -23,7 +23,7 @@ from .language_detector import detect_language
 
 # ── Model Settings ────────────────────────────────────────────────────────────
 
-GROQ_MODEL  = "llama-3.1-8b-instant"
+GROQ_MODEL  = "groq/compound-mini"
 MAX_TOKENS  = 4096
 TEMPERATURE = 0.1
 
