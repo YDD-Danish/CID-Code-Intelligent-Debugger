@@ -108,7 +108,7 @@ def _print_banner(app: Flask, config_name: str) -> None:
 ║  Environment  :  {config_name:<43}║
 ║  Debug Mode   :  {str(app.config["DEBUG"]):<43}║
 ║  Groq AI      :  {groq_status:<43}║
-║  LLM Model    :  {llama-3.3-70b-versatile:<43}║
+║  LLM Model    :  {"llama-3.3-70b-versatile":<43}║
 ║  URL          :  http://localhost:5000                       ║
 ╚══════════════════════════════════════════════════════════════╝
 """
