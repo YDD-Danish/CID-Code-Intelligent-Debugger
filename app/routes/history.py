@@ -12,6 +12,7 @@
 from flask import Blueprint, jsonify, request
 from ..models.code_session import CodeSession
 from ..extensions import db
+from flask_login import current_user, login_required
 
 history_bp = Blueprint("history", __name__)
 
@@ -36,7 +37,7 @@ def get_history():
     language_filter = request.args.get("language", None)
 
     # ── Build Query ───────────────────────────────────────────────────────────
-    query = CodeSession.query.order_by(CodeSession.created_at.desc())
+    query = CodeSession.query.filter_by(user_id=current_user.id).order_by(CodeSession.created_at.desc())
 
     if mode_filter:
         query = query.filter(CodeSession.mode == mode_filter)
@@ -127,8 +128,8 @@ def clear_history():
     """Delete ALL history sessions. This cannot be undone."""
 
     try:
-        count = CodeSession.query.count()
-        CodeSession.query.delete()
+        count = CodeSession.query.filter_by(user_id=current_user.id).count()
+        CodeSession.query.filter_by(user_id=current_user.id).delete()
         db.session.commit()
 
         return jsonify({

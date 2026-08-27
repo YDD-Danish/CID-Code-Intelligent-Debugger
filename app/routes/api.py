@@ -11,6 +11,7 @@ from ..utils.validators import validate_code_request, get_code_stats
 from ..models.code_session import CodeSession
 from ..services.llm_service import analyze_code
 from ..extensions import db
+from flask_login import current_user
 
 api_bp = Blueprint("api", __name__)
 
@@ -30,6 +31,7 @@ def save_session(code, language, mode, result, provider, response_time,
             error_message         = error_message,
             ip_address            = request.remote_addr,
             session_title         = CodeSession.generate_title(language, mode, code),
+            user_id = current_user.id if current_user.is_authenticated else None
         )
         db.session.add(session)
         db.session.commit()
@@ -113,6 +115,7 @@ def explain_code():
         "stats":         stats,
         "provider":      provider,
         "response_time": response_time,
+        "rate_limit":    llm_response.get("rate_limit", {}),
         "session_id":    session.id if session else None,
         "message":       "Code explained successfully"
     }), 200
@@ -190,6 +193,7 @@ def debug_code():
         "stats":         stats,
         "provider":      provider,
         "response_time": response_time,
+        "rate_limit":    llm_response.get("rate_limit", {}),
         "session_id":    session.id if session else None,
         "message":       "Code debugged successfully"
     }), 200
@@ -267,6 +271,7 @@ def optimize_code():
         "stats":         stats,
         "provider":      provider,
         "response_time": response_time,
+        "rate_limit":    llm_response.get("rate_limit", {}),
         "session_id":    session.id if session else None,
         "message":       "Code optimized successfully"
     }), 200

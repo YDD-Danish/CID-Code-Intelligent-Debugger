@@ -661,6 +661,17 @@
                     });
             }
         });
+                // Sign Out
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                fetch('/api/logout', { method: 'POST' })
+                    .then(() => {
+                        localStorage.clear(); // Clear UI settings on logout
+                        window.location.href = '/login';
+                    });
+            });
+        }
 
         // Reset to Defaults
         const resetBtn = document.getElementById('settingsReset');

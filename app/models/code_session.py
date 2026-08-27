@@ -6,8 +6,22 @@
 
 from datetime import datetime
 from ..extensions import db
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
+class User(UserMixin, db.Model):
+    __tablename__ = "users"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 class CodeSession(db.Model):
     """
     One row = one time a user submitted code for analysis.
@@ -18,6 +32,7 @@ class CodeSession(db.Model):
 
     # ── Primary Key ───────────────────────────────────────────────────────────
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     # ── User Input ────────────────────────────────────────────────────────────
     code_input   = db.Column(db.Text,    nullable=False)
@@ -85,6 +100,7 @@ class Snippet(db.Model):
     __tablename__ = "snippets"
 
     id          = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     name        = db.Column(db.String(200), nullable=False)
     code        = db.Column(db.Text, nullable=False)
     language    = db.Column(db.String(50), nullable=False, default="auto")

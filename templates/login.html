@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - C.I.D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --auth-bg: #0D0D0D; --auth-card: #1A1A1A; --auth-border: #2D2D2D;
+            --auth-text: #E2E8F0; --auth-muted: #64748B; --auth-accent: #4F8EF7;
+            --auth-glow: rgba(79, 142, 247, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { background: var(--auth-bg); color: var(--auth-text); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px 0; overflow-y: auto; overflow-x: hidden; position: relative; }
+        
+        /* ── Password Eye Button ── */
+        .password-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .eye-btn { position: absolute; right: 12px; background: none; border: none; color: var(--auth-muted); cursor: pointer; transition: color 0.2s; padding: 4px; display: flex; }
+        .eye-btn:hover { color: var(--auth-text); }
+        .input-group input { width: 100%; background: #141414; border: 1px solid var(--auth-border); border-radius: 8px; padding: 12px 14px; padding-right: 40px; color: var(--auth-text); font-size: 14px; outline: none; transition: all 0.2s ease; }
+        body::before { content: ''; position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, var(--auth-glow) 0%, transparent 70%); top: -200px; left: -200px; z-index: -1; filter: blur(50px); }
+        body::after { content: ''; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(167, 139, 250, 0.1) 0%, transparent 70%); bottom: -150px; right: -150px; z-index: -1; filter: blur(50px); }
+        
+        /* ── Typewriter Logo ── */
+        .logo-container { margin-bottom: 40px; text-align: center; z-index: 2; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .typewriter { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #FFFFFF; display: inline-block; overflow: hidden; white-space: nowrap; border-right: 4px solid var(--auth-accent); animation: typing 1.5s steps(7, end), blink-caret 0.8s step-end infinite; }
+        .logo-sub { font-size: 13px; color: var(--auth-muted); text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; opacity: 0; animation: fadeIn 1s ease forwards 1.6s; transition: opacity 0.3s; }
+        
+        @keyframes typing { from { width: 0 } to { width: 155px } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--auth-accent) } }
+        @keyframes fadeIn { to { opacity: 1; } from { opacity: 0; transform: translateY(10px); } }
+
+        /* ── Auth Card ── */
+        .auth-card { background: rgba(26, 26, 26, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; width: 90%; max-width: 400px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; z-index: 1; animation: fadeIn 0.8s ease forwards; transition: opacity 0.5s ease, transform 0.5s ease; }
+        
+        .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--auth-border); }
+        .auth-tab { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 600; color: var(--auth-muted); cursor: pointer; transition: all 0.3s; }
+        .auth-tab.active { color: #FFFFFF; border-bottom: 2px solid var(--auth-accent); }
+        
+        .form-slider-container { overflow: hidden; width: 100%; }
+        .form-slider { display: flex; width: 200%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .auth-form { width: 50%; padding: 0 4px; display: flex; flex-direction: column; gap: 16px; }
+        
+        .input-group label { font-size: 12px; font-weight: 600; color: var(--auth-muted); margin-bottom: 6px; display: block; }
+        .input-group input { width: 100%; background: #141414; border: 1px solid var(--auth-border); border-radius: 8px; padding: 12px 14px; color: var(--auth-text); font-size: 14px; outline: none; transition: all 0.2s ease; }
+        .input-group input:focus { border-color: var(--auth-accent); box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.15); background: #1A1A1A; }
+        
+        .submit-btn { margin-top: 4px; background: #FFFFFF; color: #0D0D0D; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .submit-btn:hover { background: #F0F0F0; transform: translateY(-1px); }
+        
+        .switch-text { font-size: 12px; color: var(--auth-muted); text-align: center; cursor: pointer; margin-top: 8px; }
+        .switch-text span { color: var(--auth-accent); font-weight: 600; }
+        .error-msg { color: #F87171; font-size: 12px; font-weight: 500; text-align: center; min-height: 15px; }
+
+        /* ── Typewriter Text ── */
+        .typewriter { font-weight: 900 !important; color: #FFFFFF; }
+
+                /* ── Transition Animation Classes ── */
+        .typewriter { font-weight: 900 !important; color: #FFFFFF; }
+        .logo-container { transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
+        .logo-container.zoom-mode { transform: scale(1.8) translateY(35px); }
+        .logo-container.zoom-mode .logo-sub { opacity: 0; }
+        
+        .auth-card.fade-out { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(15px); pointer-events: none; }
+        
+        .mag-glass { position: fixed; top: 50%; left: 50%; margin-top: -30px; font-size: 70px; opacity: 0; z-index: 2000; pointer-events: none; }
+        .mag-glass.animate { animation: smoothRotateScan 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.2s; }
+        
+        /* Fade to black to hide network load */
+        body.fade-to-black::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0D0D0D; z-index: 9999; animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes smoothRotateScan {
+            0% { transform: translate(calc(-50% - 40vw), -50%) rotate(-45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+            30% { opacity: 1; }
+            50% { transform: translate(-50%, -50%) rotate(0deg) scale(1.6); opacity: 1; filter: drop-shadow(0 0 40px rgba(79, 142, 247, 1)); }
+            70% { opacity: 1; }
+            100% { transform: translate(calc(-50% + 40vw), -50%) rotate(45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+        }
+        
+        /* Flies to top-left, shrinks to 20px (0.625 of 32px), hides cursor */
+        .logo-container.to-nav-mode {
+            transform: translate(calc(-50vw + 110px), calc(-50vh + 28px)) scale(0.625);
+        }
+        .logo-container.to-nav-mode .typewriter {
+            border-right: none; /* removes the _ cursor */
+            animation: none;
+            letter-spacing: 3px;
+        }
+        .logo-container.to-nav-mode .logo-sub { opacity: 0; display: none; }
+        
+        .auth-card.fade-out { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(15px); pointer-events: none; }
+        
+        .mag-glass { 
+            position: fixed; top: 50%; left: 50%; margin-top: 50px; 
+            font-size: 70px; opacity: 0; z-index: 2000; pointer-events: none; 
+        }
+        
+        .mag-glass.animate { animation: smoothRotateScan 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.2s; }
+        
+        @keyframes smoothRotateScan {
+            0% { transform: translate(calc(-50% - 40vw), -50%) rotate(-45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+            30% { opacity: 1; }
+            50% { transform: translate(-50%, -50%) rotate(0deg) scale(1.6); opacity: 1; filter: drop-shadow(0 0 40px rgba(79, 142, 247, 1)); }
+            70% { opacity: 1; }
+            100% { transform: translate(calc(-50% + 40vw), -50%) rotate(45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+        }
+        
+        /* Moves logo to the exact spot of the workspace Navbar */
+        .logo-container.to-nav-mode {
+            transform: translate(calc(-50vw + 130px), calc(-50vh + 28px)) scale(0.625);
+        }
+        .logo-container.to-nav-mode .logo-sub { opacity: 0; display: none; }
+        
+        .auth-card.fade-out { opacity: 0; transform: translateY(20px) scale(0.9); filter: blur(15px); pointer-events: none; }
+        
+        /* Z-index 2000 makes it pass OVER the logo */
+        .mag-glass { 
+            position: fixed; top: 50%; left: 50%; margin-top: -30px; 
+            font-size: 70px; opacity: 0; z-index: 2000; pointer-events: none; 
+        }
+        
+        .mag-glass.animate { animation: smoothRotateScan 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.2s; }
+        
+        @keyframes smoothRotateScan {
+            0% { transform: translate(calc(-50% - 40vw), -50%) rotate(-45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+            30% { opacity: 1; }
+            50% { transform: translate(-50%, -50%) rotate(0deg) scale(1.6); opacity: 1; filter: drop-shadow(0 0 40px rgba(79, 142, 247, 1)); }
+            70% { opacity: 1; }
+            100% { transform: translate(calc(-50% + 40vw), -50%) rotate(45deg) scale(0.8); opacity: 0; filter: drop-shadow(0 0 0px transparent); }
+        }
+                /* ── Mobile Compatibility Fixes ── */
+        @media (max-width: 480px) {
+            .auth-card { padding: 24px 20px; width: 92%; }
+            .typewriter { font-size: 24px; }
+            @keyframes typing { from { width: 0 } to { width: 115px } }
+            
+            /* Smaller zoom and realigned glass for mobile */
+            .logo-container.zoom-mode { transform: scale(1.25) translateY(20px); }
+            .mag-glass { font-size: 45px; margin-top: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container" id="logoWrap">
+        <div class="typewriter">&gt; C.I.D_</div>
+        <div class="logo-sub">Code Intelligent Debugger</div>
+    </div>
+
+    <div class="auth-card" id="authCard">
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="tabLogin">Log In</div>
+            <div class="auth-tab" id="tabSignup">Sign Up</div>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="form-slider-container">
+            <div class="form-slider" id="formSlider">
+                <!-- Login Form -->
+                <form class="auth-form" id="loginForm">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="loginEmail" required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" required>
+                        <button type="button" class="eye-btn" onclick="togglePassword('loginPassword', this)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+                    <button type="submit" class="submit-btn" id="loginBtn">Access Workspace</button>
+                    <div class="switch-text" onclick="document.getElementById('tabSignup').click()">Don't have an account? <span>Sign Up</span></div>
+                </form>
+
+                <!-- Signup Form -->
+                <form class="auth-form" id="signupForm">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="signupEmail" required autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="signupPassword" required minlength="6">
+                        <button type="button" class="eye-btn" onclick="togglePassword('signupPassword', this)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+                    <button type="submit" class="submit-btn" id="signupBtn">Create Account</button>
+                    <div class="switch-text" onclick="document.getElementById('tabLogin').click()">Already have an account? <span>Log In</span></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="mag-glass" id="magGlass">🔍</div>
+
+    <script>
+        const tabLogin = document.getElementById('tabLogin');
+        const tabSignup = document.getElementById('tabSignup');
+        const formSlider = document.getElementById('formSlider');
+        const errorMsg = document.getElementById('errorMsg');
+
+        tabLogin.addEventListener('click', () => {
+            tabLogin.classList.add('active'); tabSignup.classList.remove('active');
+            formSlider.style.transform = 'translateX(0)'; errorMsg.textContent = '';
+        });
+
+        tabSignup.addEventListener('click', () => {
+            tabSignup.classList.add('active'); tabLogin.classList.remove('active');
+            formSlider.style.transform = 'translateX(-50%)'; errorMsg.textContent = '';
+        });
+
+         function triggerSuccessAnimation() {
+            // 1. Hide card, zoom logo
+            document.getElementById('authCard').classList.add('fade-out');
+            document.getElementById('logoWrap').classList.add('zoom-mode');
+            
+            // 2. Mag glass scans OVER the logo
+            setTimeout(() => {
+                document.getElementById('magGlass').classList.add('animate');
+            }, 300);
+
+            // 3. Fade screen to black to hide the browser loading gap
+            setTimeout(() => {
+                document.body.classList.add('fade-to-black');
+            }, 1800);
+
+            // 4. Redirect while the screen is black
+            setTimeout(() => {
+                window.location.replace('/'); 
+            }, 2200);
+        }
+
+        async function handleAuth(e, endpoint, emailId, passwordId, btnId) {
+            e.preventDefault();
+            const btn = document.getElementById(btnId);
+            const originalText = btn.textContent;
+            btn.textContent = 'Authenticating...'; btn.disabled = true; errorMsg.textContent = '';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById(emailId).value,
+                        password: document.getElementById(passwordId).value
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    btn.textContent = 'Success!';
+                    triggerSuccessAnimation(); 
+                } else {
+                    errorMsg.textContent = data.error || 'An error occurred';
+                    btn.disabled = false; btn.textContent = originalText;
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Network error. Try again.';
+                btn.disabled = false; btn.textContent = originalText;
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => handleAuth(e, '/api/login', 'loginEmail', 'loginPassword', 'loginBtn'));
+        document.getElementById('signupForm').addEventListener('submit', (e) => handleAuth(e, '/api/signup', 'signupEmail', 'signupPassword', 'signupBtn'));
+        
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+            } else {
+                input.type = 'password';
+                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -95,6 +95,7 @@ def security_scan():
         "stats":         stats,
         "provider":      provider,
         "response_time": response_time,
+        "rate_limit":    llm_response.get("rate_limit", {}),
         "session_id":    session_id,
         "message":       "Security scan completed"
     }), 200

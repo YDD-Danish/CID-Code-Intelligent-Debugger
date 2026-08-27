@@ -12,16 +12,16 @@
     --border:        #2D2D2D;
     --border-light:  #4A4A4A;
     --text-primary:  #E2E8F0;
-    --text-secondary:#6B6B6B;
-    --text-muted:    #4A4A4A;
+    --text-secondary:#94A3B8;
+    --text-muted:    #64748B;
     --accent:        #4F8EF7;
     --accent-soft:   rgba(79, 142, 247, 0.15);
     --purple:        #A78BFA;
     --green:         #34D399;
     --amber:         #FBBF24;
     --red:           #F87171;
-    --glass-bg:      rgba(255, 255, 255, 0.04);
-    --glass-border:  rgba(255, 255, 255, 0.10);
+    --glass-bg:      rgba(26, 26, 26, 0.7);
+    --glass-border:  rgba(255, 255, 255, 0.08);
     --glass-shadow:  rgba(0, 0, 0, 0.4);
     --editor-bg:     #1A1A1A;
     --scrollbar-bg:  #2D2D2D;
@@ -29,26 +29,26 @@
 }
 
 [data-theme="light"] {
-    --bg-base:       #B8D0D8;
+    --bg-base:       #F4F7F9;
     --bg-surface:    #FFFFFF;
-    --bg-elevated:   #98B0B8;
-    --border:        #7A9098;
-    --border-light:  #98B0B8;
-    --text-primary:  #3D4A52;
-    --text-secondary:#5A7080;
-    --text-muted:    #7A9098;
-    --accent:        #4F8EF7;
-    --accent-soft:   rgba(79, 142, 247, 0.12);
+    --bg-elevated:   #E8F0F4;
+    --border:        #D5E0E6;
+    --border-light:  #E7EEF2;
+    --text-primary:  #263640;
+    --text-secondary:#526673;
+    --text-muted:    #7A8C98;
+    --accent:        #3B82F6;
+    --accent-soft:   rgba(59, 130, 246, 0.10);
     --purple:        #7C3AED;
     --green:         #059669;
     --amber:         #D97706;
     --red:           #DC2626;
-    --glass-bg:      rgba(255, 255, 255, 0.6);
-    --glass-border:  rgba(61, 74, 82, 0.12);
-    --glass-shadow:  rgba(0, 0, 0, 0.08);
-    --editor-bg:     #FFFFFF;
-    --scrollbar-bg:  #98B0B8;
-    --scrollbar-thumb:#7A9098;
+    --glass-bg:      rgba(255, 255, 255, 0.72);
+    --glass-border:  rgba(38, 54, 64, 0.08);
+    --glass-shadow:  rgba(38, 54, 64, 0.06);
+    --editor-bg:     #FCFDFE;
+    --scrollbar-bg:  #EDF3F6;
+    --scrollbar-thumb:#B5C5CE;
 }
 
 
@@ -226,34 +226,40 @@ body {
 
 /* ── Mobile Panel Toggle ────────────────────────────────────────────────────── */
 
-.mobile-toggle {
+/* ── Mobile Panel Toggle ────────────────────────────────────────────────────── */
+.mobile-toggle-wrapper {
     display: none;
-    padding: 8px 16px;
-    gap: 4px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
 }
-
+.mobile-toggle {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    margin: 12px auto 0 auto; /* Auto perfectly centers it */
+    width: calc(100% - 24px); /* Prevents the black gap overflow */
+    max-width: 400px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
 .panel-toggle {
     flex: 1;
     padding: 8px;
     background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: none;
+    border-radius: 6px;
     color: var(--text-secondary);
     font-family: 'Inter', sans-serif;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
+    text-align: center;
     transition: all 0.2s ease;
 }
-
 .panel-toggle.active {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-
 
 /* ── Main Content ───────────────────────────────────────────────────────────── */
 
@@ -342,21 +348,6 @@ body {
     width: 100%;
     height: 100%;
 }
-
-/* Mobile — cap editor height so buttons below stay visible */
-@media (max-width: 768px) {
-    .editor-container {
-        flex: none;
-        height: 300px;
-        min-height: 300px;
-        max-height: 300px;
-    }
-
-    #monacoEditor {
-        height: 300px;
-    }
-}
-
 
 /* ── Samples Bar ────────────────────────────────────────────────────────────── */
 
@@ -452,9 +443,9 @@ body {
 .results-container {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 24px;
+    background: var(--bg-base);
 }
-
 
 /* ── Empty State ────────────────────────────────────────────────────────────── */
 
@@ -463,45 +454,68 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 36px;
     text-align: center;
-    padding: 40px 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px var(--glass-shadow);
 }
 
 .empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--accent-soft);
+    font-size: 28px;
+    opacity: 1;
 }
 
 .empty-state h3 {
-    font-size: 16px;
-    font-weight: 600;
+    margin-bottom: 10px;
     color: var(--text-primary);
-    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -0.2px;
 }
 
 .empty-state p {
-    font-size: 13px;
+    max-width: 390px;
+    margin-bottom: 28px;
     color: var(--text-secondary);
-    margin-bottom: 24px;
-    max-width: 320px;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 .empty-features {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    max-width: 520px;
+    gap: 10px;
 }
 
 .feature-chip {
-    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 9px;
     background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 12px;
     color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: left;
 }
 
 
@@ -2756,9 +2770,10 @@ body.compact-mode .settings-section {
         font-size: 16px;
     }
 
-    /* ── Show the mobile panel toggle ─────────────────────────────────────── */
-    .mobile-toggle {
-        display: flex;
+        /* ── Show the mobile panel toggle ─────────────────────────────────────── */
+    .mobile-toggle-wrapper { 
+        display: block; 
+        width: 100%; 
     }
 
     /* ── Panels stack vertically ──────────────────────────────────────────── */
@@ -3641,4 +3656,667 @@ body.no-logo-animation .logo-magnifier {
     .snippets-drawer {
         width: 100%;
     }
+}
+
+/* Empty state: single-column guide on small screens */
+@media (max-width: 560px) {
+    .results-container {
+        padding: 14px;
+    }
+
+    .empty-state {
+        padding: 32px 20px;
+        border-radius: 12px;
+    }
+
+    .empty-features {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Navbar hierarchy and control refinement ───────────────────────────────── */
+
+.navbar {
+    height: 64px;
+    padding: 0 20px;
+    background: var(--glass-bg);
+    border-bottom-color: var(--glass-border);
+}
+
+.nav-left,
+.nav-right {
+    gap: 8px;
+}
+
+.logo {
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-sub {
+    font-size: 11px;
+    letter-spacing: 0.6px;
+}
+
+/* The tabs remain grouped, but inactive modes stay visually quiet. */
+.mode-tabs {
+    gap: 3px;
+    padding: 4px;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-surface);
+    border-radius: 12px;
+}
+
+.mode-tab {
+    padding: 7px 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.mode-tab:hover {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+}
+
+.mode-tab.active {
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.24);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Keep New available, but make it a quiet secondary action. */
+.new-btn {
+    min-height: 34px;
+    margin-right: 0;
+    padding: 6px 10px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--purple);
+}
+
+.new-btn:hover {
+    background: rgba(124, 58, 237, 0.10);
+    box-shadow: none;
+    transform: none;
+}
+
+/* Run stays the clear executable action. */
+.run-btn {
+    min-height: 34px;
+    margin-right: 0;
+    padding: 6px 12px;
+    box-shadow: none;
+}
+
+.run-btn:hover {
+    box-shadow: 0 3px 10px rgba(5, 150, 105, 0.18);
+}
+
+/* Align all utility buttons to the same quiet visual weight. */
+.history-btn,
+.snippets-btn,
+.theme-toggle,
+.settings-btn {
+    width: 34px;
+    height: 34px;
+    border-color: var(--border-light);
+    border-radius: 9px;
+    color: var(--text-secondary);
+}
+
+.history-btn {
+    margin-right: 0;
+}
+
+.snippets-btn {
+    margin-right: 4px;
+}
+
+.settings-btn {
+    margin-left: 0;
+}
+
+.history-btn:hover,
+.snippets-btn:hover,
+.theme-toggle:hover,
+.settings-btn:hover {
+    background: var(--accent-soft);
+    border-color: rgba(59, 130, 246, 0.34);
+    color: var(--accent);
+}
+
+/* Do not rotate the Settings icon; a stable control feels calmer and clearer. */
+.settings-btn:hover {
+    transform: none;
+}
+
+/* Visible, consistent keyboard focus for all top navigation controls. */
+.mode-tab:focus-visible,
+.new-btn:focus-visible,
+.run-btn:focus-visible,
+.history-btn:focus-visible,
+.snippets-btn:focus-visible,
+.theme-toggle:focus-visible,
+.settings-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ── Mobile code workspace: keep samples visible and anchor Analyse at bottom ── */
+
+@media (max-width: 768px) {
+    .main-content {
+        min-height: 0;
+    }
+
+    .panel-left.active {
+        display: flex;
+        min-height: 0;
+    }
+
+    .panel-left.active .editor-container {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+    }
+
+    .panel-left.active #monacoEditor {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .panel-left.active .samples-bar {
+        display: block;
+        flex-shrink: 0;
+    }
+
+    .panel-left.active .analyse-btn {
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Samples are useful for first-time mobile users; do not hide them. */
+    .samples-bar {
+        display: block;
+        padding: 7px 12px;
+    }
+
+    .sample-select {
+        min-height: 34px;
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+
+    .analyse-btn {
+        min-height: 44px;
+        margin: 10px 12px 12px;
+    }
+}
+
+/* ── Mobile Code panel: fixed header/actions with a flexible Monaco workspace ─ */
+
+@media (max-width: 768px) {
+    .panel-left.active {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .panel-left.active .editor-container {
+        min-height: 0;
+        height: auto;
+    }
+
+    .panel-left.active #monacoEditor {
+        min-height: 0;
+        height: 100%;
+    }
+}
+
+/* ── Monaco: fill the editor row allocated by the mobile CSS Grid ─────────── */
+
+@media (max-width: 768px) {
+    .panel-left.active .editor-container {
+        align-self: stretch;
+        height: 100% !important;
+        min-height: 0;
+    }
+
+    .panel-left.active #monacoEditor {
+        width: 100%;
+        height: 100% !important;
+        min-height: 0;
+    }
+}
+
+/* ── Code workspace controls: stats, samples and primary action ────────────── */
+
+/* Quiet, readable editor metadata instead of a heavy dashboard strip. */
+.stats-bar {
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 9px 16px;
+    background: var(--bg-surface);
+    border-top-color: var(--border-light);
+}
+
+.stat-item {
+    gap: 5px;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.45px;
+}
+
+.stat-value {
+    font-size: 11px;
+}
+
+.stat-divider {
+    height: 16px;
+    background: var(--border-light);
+}
+
+/* The sample selector should read as an optional starting point, not an input error. */
+.samples-bar {
+    padding: 9px 16px;
+    border-top-color: var(--border-light);
+    background: var(--bg-surface);
+}
+
+.sample-select {
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid var(--border-light);
+    border-radius: 9px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.sample-select:hover {
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.sample-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Analyse remains the single clear primary action in the Code panel. */
+.analyse-btn {
+    min-height: 48px;
+    margin: 10px 16px 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--accent);
+    box-shadow: 0 5px 14px rgba(59, 130, 246, 0.18);
+    letter-spacing: -0.1px;
+}
+
+.analyse-btn:hover:not(:disabled) {
+    background: #2563EB;
+    box-shadow: 0 7px 18px rgba(59, 130, 246, 0.24);
+    transform: translateY(-1px);
+}
+
+.analyse-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.analyse-btn:focus-visible,
+.sample-select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Keep the workspace comfortable and readable on narrow phone screens. */
+@media (max-width: 480px) {
+    .stats-bar {
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .stat-label {
+        font-size: 8px;
+        letter-spacing: 0.3px;
+    }
+
+    .stat-value {
+        font-size: 10px;
+    }
+
+    .stat-divider {
+        height: 14px;
+    }
+
+    .samples-bar {
+        padding: 8px 12px;
+    }
+
+    .analyse-btn {
+        margin: 10px 12px 12px;
+    }
+}
+
+/* ── Analysis results: clearer hierarchy and calmer cards ──────────────────── */
+
+.results-output {
+    padding-bottom: 8px;
+}
+
+.quality-score-card {
+    gap: 18px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px var(--glass-shadow);
+}
+
+.quality-gauge {
+    width: 76px;
+    height: 76px;
+}
+
+.result-summary {
+    padding: 15px 16px;
+    margin-bottom: 18px;
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.result-section {
+    margin-bottom: 22px;
+}
+
+.result-section-title {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+    margin-bottom: 10px;
+    padding: 0 0 8px;
+    border-bottom-color: var(--border-light);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+}
+
+/* Bugs keep their severity colour, but the main card remains calm and readable. */
+.bug-card {
+    padding: 14px 15px;
+    margin-bottom: 12px;
+    background: var(--bg-surface);
+    border-color: var(--border-light);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px var(--glass-shadow);
+}
+
+.bug-card.critical {
+    border-left-width: 4px;
+}
+
+.bug-header {
+    gap: 9px;
+    margin-bottom: 9px;
+}
+
+.bug-description {
+    line-height: 1.6;
+}
+
+/* Diff is intentionally compact, technical and easier to scan. */
+.diff-container {
+    margin: 14px 0;
+    border-color: var(--border-light);
+    border-radius: 10px;
+    background: var(--bg-base);
+}
+
+.diff-header {
+    background: var(--bg-elevated);
+    border-bottom-color: var(--border-light);
+}
+
+.diff-header-cell {
+    padding: 9px 14px;
+    font-size: 10px;
+    letter-spacing: 0.7px;
+}
+
+.diff-header-cell.before {
+    border-right-color: var(--border-light);
+}
+
+.diff-column {
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+/* Do not let a long result feel cramped on smaller screens. */
+@media (max-width: 768px) {
+    .quality-score-card {
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .result-summary {
+        padding: 14px;
+    }
+
+    .bug-card {
+        padding: 13px;
+    }
+
+    .diff-body {
+        overflow-x: auto;
+    }
+
+    .diff-column {
+        min-width: 250px;
+    }
+}
+
+/* ── Groq current rate-limit status ───────────────────────────────────────── */
+
+.rate-limit-status {
+    display: inline-flex;
+    align-items: center;
+    max-width: fit-content;
+    min-height: 24px;
+    padding: 3px 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    border-radius: 5px;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Use colour only when the current Groq token window is genuinely low. */
+.rate-limit-status.is-low {
+    border-color: rgba(217, 119, 6, 0.32);
+    background: rgba(217, 119, 6, 0.08);
+    color: var(--amber);
+}
+
+.rate-limit-status.is-critical {
+    border-color: rgba(220, 38, 38, 0.32);
+    background: rgba(220, 38, 38, 0.08);
+    color: var(--red);
+}
+
+/* Keep Results header controls usable on narrow screens. */
+@media (max-width: 768px) {
+    #resultsPanel .panel-controls {
+        gap: 5px;
+    }
+
+    .rate-limit-status {
+        max-width: 112px;
+        min-height: 22px;
+        padding: 3px 6px;
+        font-size: 9px;
+    }
+}
+
+/* ── Mobile analysis results: cleaner header and readable diffs ────────────── */
+
+@media (max-width: 480px) {
+    /* Keep the Results heading on one clean line. */
+    #resultsPanel .panel-header {
+        padding: 8px 12px;
+    }
+
+    #resultsPanel .panel-title {
+        flex: 0 0 auto;
+        gap: 6px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    #resultsPanel .panel-controls {
+        min-width: 0;
+        gap: 4px;
+    }
+
+    /* Provider and token window are more useful than response duration on a phone. */
+    #resultsPanel .time-badge {
+        display: none !important;
+    }
+
+    .rate-limit-status {
+        max-width: 92px;
+    }
+
+    /* Show code changes vertically on small screens instead of tiny side-by-side columns. */
+    .diff-header,
+    .diff-body {
+        flex-direction: column;
+    }
+
+    .diff-header-cell {
+        width: 100%;
+        padding: 8px 12px;
+    }
+
+    .diff-header-cell.before {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .diff-column {
+        width: 100%;
+        min-width: 0;
+        max-height: 220px;
+        overflow: auto;
+        padding: 11px 12px;
+    }
+
+    .diff-column.before {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .bug-card {
+        padding: 12px;
+    }
+
+    .bug-description {
+        font-size: 12px;
+        line-height: 1.55;
+    }
+}
+
+.more-btn { display: none; background: none; border: none; color: var(--text-primary); font-size: 22px; cursor: pointer; padding: 0; font-weight: bold; width: 36px; height: 36px; }
+.mobile-dropdown { display: none; position: absolute; top: 56px; right: 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px; gap: 8px; flex-direction: column; box-shadow: 0 4px 12px var(--glass-shadow); z-index: 2000; }
+.mobile-dropdown.show { display: flex; animation: fadeIn 0.2s ease; }
+
+@media (max-width: 768px) {
+    .more-btn { display: flex; align-items: center; justify-content: center; }
+    .mobile-dropdown button { width: 100% !important; height: 36px; display: flex !important; justify-content: center; align-items: center; }
+    #snippetsBtn::after { content: " Snippets"; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; margin-left: 6px; }
+}
+
+@media (max-width: 768px) {
+    /* Sticky bottom Analyse button on mobile */
+    #codePanel {
+        position: relative;
+        padding-bottom: 70px; /* Room for the button */
+    }
+    .analyse-btn {
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        margin: 0;
+        z-index: 50;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        /* Removed width, let left/right anchor it perfectly */
+    }
+}
+
+/* ── Main Page Load Animations ── */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.app-wrapper > nav { animation: slideUpFade 0.6s ease-out backwards; animation-delay: 0.1s; }
+.app-wrapper > .mobile-toggle-wrapper { animation: slideUpFade 0.6s ease-out backwards; animation-delay: 0.15s; }
+.app-wrapper > .main-content > #codePanel { animation: slideUpFade 0.6s ease-out backwards; animation-delay: 0.2s; }
+.app-wrapper > .main-content > #resultsPanel { animation: slideUpFade 0.6s ease-out backwards; animation-delay: 0.3s; }
+
+/* ── iOS Push Back Animation ── */
+body {
+    background: #000000; /* Black background behind the pushed app */
+}
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    background: var(--bg-base);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), 
+                border-radius 0.4s ease, 
+                opacity 0.4s ease;
+    transform-origin: center center;
+}
+/* Triggered when a drawer opens */
+body.drawer-open .app-wrapper {
+    transform: scale(0.92) translateX(-20px);
+    border-radius: 16px;
+    opacity: 0.6;
+    overflow: hidden;
+    pointer-events: none; /* Disables clicking main app while drawer is open */
+}
+
+/* ── ChatGPT Streaming Effect ── */
+.stream-animate {
+    opacity: 0;
+    transform: translateY(15px);
+    animation: streamIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes streamIn {
+    to { opacity: 1; transform: translateY(0); }
 }

@@ -8,6 +8,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 import time
+import hashlib
 from flask import current_app
 from groq import Groq
 
@@ -26,6 +27,7 @@ from .language_detector import detect_language
 GROQ_MODEL  = "groq/compound-mini"
 MAX_TOKENS  = 4096
 TEMPERATURE = 0.1
+RESPONSE_CACHE = {}
 
 
 # ── Main Function ─────────────────────────────────────────────────────────────
@@ -67,6 +69,13 @@ def analyze_code(
         current_app.logger.info(f"Auto detected language: {resolved_language}")
     else:
         resolved_language = language
+        # ── Step 1.5: Check Cache ─────────────────────────────────────────────────
+    cache_key = hashlib.md5(f"{mode}|{resolved_language}|{beginner_mode}|{code.strip()}".encode()).hexdigest()
+    if cache_key in RESPONSE_CACHE:
+        current_app.logger.info("⚡ INSTANT CACHE HIT!")
+        cached = RESPONSE_CACHE[cache_key].copy()
+        cached["response_time"] = 0.01 # Show users it was instant!
+        return cached
 
     # ── Step 2: Build Prompt ──────────────────────────────────────────────────
     prompt = _build_prompt(mode, code, resolved_language, beginner_mode)
@@ -80,24 +89,32 @@ def analyze_code(
             "Please add it to your .env file."
         )
 
-    # ── Step 4: Call Groq ─────────────────────────────────────────────────────
+       # ── Step 4: Call Groq ─────────────────────────────────────────────────────
     try:
         current_app.logger.info(
             f"Calling Groq — mode={mode} language={resolved_language}"
         )
 
-        raw_response  = _call_groq(prompt, groq_key)
+        raw_response, rate_limit = _call_groq(
+            prompt,
+            groq_key,
+            return_rate_limit=True
+        )
         result        = parse_llm_response(raw_response, mode, resolved_language)
         response_time = round(time.time() - start_time, 3)
 
         current_app.logger.info(f"Groq responded in {response_time}s")
 
-        return {
+        # Save to cache and return
+        final_response = {
             "result":        result,
             "provider":      "groq",
             "language":      resolved_language,
             "response_time": response_time,
+            "rate_limit":    rate_limit,
         }
+        RESPONSE_CACHE[cache_key] = final_response
+        return final_response
 
     except Exception as e:
         current_app.logger.error(f"Groq API error: {e}")
@@ -106,26 +123,21 @@ def analyze_code(
 
 # ── Groq API Call ─────────────────────────────────────────────────────────────
 
-def _call_groq(prompt: str, api_key: str, expect_json: bool = True) -> str:
+def _call_groq(
+    prompt: str,
+    api_key: str,
+    expect_json: bool = True,
+    return_rate_limit: bool = False
+):
     """
-    Send prompt to Groq and return raw text response.
+    Send a request to Groq.
 
-    Args:
-        prompt:      Complete prompt string
-        api_key:     Groq API key from .env
-        expect_json: True for analysis modes (returns JSON)
-                     False for chat mode (returns natural conversation)
-
-    Returns:
-        Raw text response from the AI
-
-    Raises:
-        Exception on any API error or rate limit
+    By default, returns only the response text so existing Chat functionality
+    remains unchanged. Analysis calls can request safe rate-limit information.
     """
 
     client = Groq(api_key=api_key)
 
-    # Choose system message based on response type
     if expect_json:
         system_msg = (
             "You are C.I.D, an expert code analysis assistant. "
@@ -141,29 +153,48 @@ def _call_groq(prompt: str, api_key: str, expect_json: bool = True) -> str:
         )
         temp = 0.4
 
-    try:
-        response = client.chat.completions.create(
-            model    = GROQ_MODEL,
-            messages = [
-                {
-                    "role":    "system",
-                    "content": system_msg
-                },
-                {
-                    "role":    "user",
-                    "content": prompt
-                }
-            ],
-            temperature = temp,
-            max_tokens  = MAX_TOKENS,
-        )
-        return response.choices[0].message.content
+    raw_response = client.chat.completions.with_raw_response.create(
+        model=GROQ_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": system_msg
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=temp,
+        max_tokens=MAX_TOKENS,
+    )
 
-    except Exception as e:
-        err_msg = str(e).lower()
-        if "429" in err_msg or "rate_limit" in err_msg or "rate limit" in err_msg:
-            raise Exception("Rate limit reached on Groq free tier. Please wait 10–15 seconds before trying again.")
-        raise Exception(f"Groq API error: {str(e)}")
+    response = raw_response.parse()
+    content = response.choices[0].message.content
+
+    # Groq headers provide current rate-limit information only.
+    # No API key, source code, prompt, or personal data is returned.
+    rate_limit = {
+        "tokens_limit": raw_response.headers.get("x-ratelimit-limit-tokens"),
+        "tokens_remaining": raw_response.headers.get(
+            "x-ratelimit-remaining-tokens"
+        ),
+        "tokens_reset": raw_response.headers.get("x-ratelimit-reset-tokens"),
+        "requests_limit": raw_response.headers.get(
+            "x-ratelimit-limit-requests"
+        ),
+        "requests_remaining": raw_response.headers.get(
+            "x-ratelimit-remaining-requests"
+        ),
+        "requests_reset": raw_response.headers.get(
+            "x-ratelimit-reset-requests"
+        ),
+    }
+
+    if return_rate_limit:
+        return content, rate_limit
+
+    return content
 
 # ── Prompt Router ─────────────────────────────────────────────────────────────
 

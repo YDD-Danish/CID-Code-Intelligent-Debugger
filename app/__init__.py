@@ -7,7 +7,7 @@
 import os
 from flask import Flask
 from .config import config_map
-from .extensions import db, migrate, limiter, cors
+from .extensions import db, migrate, limiter, cors, login_manager
 
 # Absolute path to the project root folder
 # This resolves to: C:\Users\Danish Khan\C.I.D
@@ -55,6 +55,13 @@ def create_app(config_name: str = None) -> Flask:
     migrate.init_app(app, db)
     limiter.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    login_manager.init_app(app)
+    login_manager.login_view = "main.login_page"
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models.code_session import User
+        return User.query.get(int(user_id))
 
     # ── Register Blueprints ───────────────────────────────────────────────────
     from .routes.main     import main_bp
@@ -62,8 +69,10 @@ def create_app(config_name: str = None) -> Flask:
     from .routes.security import security_bp
     from .routes.history  import history_bp
     from .routes.snippets import snippets_bp
+    from .routes.auth import auth_bp 
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp)
     app.register_blueprint(api_bp,      url_prefix="/api")
     app.register_blueprint(security_bp, url_prefix="/api")
     app.register_blueprint(history_bp,  url_prefix="/api")

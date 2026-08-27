@@ -10,7 +10,7 @@
     gtag('config', 'G-RD74TMBGY9');
 </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     {% if share_id %}
     <meta name="cid-share-id" content="{{ share_id }}">
     {% endif %}
@@ -31,6 +31,7 @@
 <body>
 
     <!-- ── NAVBAR ──────────────────────────────────────────────────────── -->
+    <div class="app-wrapper">
     <nav class="navbar">
         <div class="nav-left">
             <button class="history-btn" id="historyBtn" title="History">
@@ -74,7 +75,11 @@
             </div>
         </div>
 
-        <div class="nav-right">
+                <div class="nav-right">
+            <!-- Mobile More Menu -->
+            <button class="more-btn" id="moreBtn">⋮</button>
+            <div class="mobile-dropdown" id="mobileDropdown"></div>
+            
             <button class="new-btn" id="newSessionBtn" title="New Session (Clear All)">
                 <span class="new-icon">➕</span>
                 <span class="new-label">New</span>
@@ -94,13 +99,15 @@
     </nav>
 
     <!-- ── MOBILE PANEL TOGGLE ──────────────────────────────────────── -->
-    <div class="mobile-toggle">
-        <button class="panel-toggle active" data-panel="code">
-            <span>Code</span>
-        </button>
-        <button class="panel-toggle" data-panel="results">
-            <span>Results</span>
-        </button>
+       <div class="mobile-toggle-wrapper">
+        <div class="mobile-toggle">
+            <button class="panel-toggle active" data-panel="code">
+                <span>Code</span>
+            </button>
+            <button class="panel-toggle" data-panel="results">
+                <span>Results</span>
+            </button>
+        </div>
     </div>
 
     <!-- ── MAIN CONTENT ──────────────────────────────────────────────── -->
@@ -199,6 +206,7 @@
                 <div class="panel-controls">
                     <span class="provider-badge" id="providerBadge" style="display:none;"></span>
                     <span class="time-badge" id="timeBadge" style="display:none;"></span>
+                    <span class="rate-limit-status" id="rateLimitStatus" style="display:none;" aria-live="polite"></span>
                     <button class="icon-btn" id="chatToggleBtn" title="Ask follow-up" style="display:none;">💬</button>
                     <button class="icon-btn" id="copyBtn" title="Copy result" style="display:none;">📋</button>
                     <button class="icon-btn" id="exportPdfBtn" title="Export as PDF" style="display:none;">📄</button>
@@ -297,7 +305,7 @@
         </section>
 
     </main>
-    
+    </div>
      <!-- ── SNIPPETS DRAWER ────────────────────────────────────────── -->
     <div class="snippets-overlay" id="snippetsOverlay"></div>
 
@@ -688,6 +696,11 @@
                         🗑 Clear All Data
                     </button>
                 </div>
+                <div class="setting-row">
+        <button class="setting-action-btn danger" id="logoutBtn">
+            Sign Out 🚪
+        </button>
+    </div>
             </div>
 
         </div>
@@ -702,7 +715,6 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ── SCRIPTS ─────────────────────────────────────────────────── -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>

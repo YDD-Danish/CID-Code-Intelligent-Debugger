@@ -10,6 +10,7 @@
     let editor = null;
     let currentMode = 'explain';
     let isLoading = false;
+    let rateLimitCountdownTimer = null;
 
     // ── Sample Codes ──────────────────────────────────────────────────────────
     const SAMPLES = {
@@ -173,7 +174,11 @@ int main() {
 
     // ── Initialize App ────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
-        initMonaco();
+        // ── Lazy Load Monaco Editor ──
+        const monacoScript = document.createElement('script');
+        monacoScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js';
+        monacoScript.onload = () => initMonaco();
+        document.body.appendChild(monacoScript);
         initModeTabs();
         initAnalyseButton();
         initSampleSelect();
@@ -395,7 +400,31 @@ int main() {
                 }
             });
             window.monacoEditorInstance = editor;
+            forceEditorLayout();
 
+// Keep Monaco matched to its container on mobile, tablet, resize,
+// orientation changes, and Code/Results panel switches.
+const editorContainer = document.getElementById('editorContainer');
+
+if (editorContainer && 'ResizeObserver' in window) {
+    window.cidEditorResizeObserver = new ResizeObserver(function (entries) {
+        const entry = entries[0];
+
+        window.requestAnimationFrame(function () {
+            if (!editor || !entry) return;
+
+            const width = Math.floor(entry.contentRect.width);
+            const height = Math.floor(entry.contentRect.height);
+
+            if (width > 0 && height > 0) {
+                editor.layout({ width: width, height: height });
+            }
+        });
+    });
+
+    window.cidEditorResizeObserver.observe(editorContainer);
+}
+            
             // Update stats bar whenever content changes
             editor.onDidChangeModelContent(function () {
                 updateStatsBar();
@@ -492,8 +521,54 @@ int main() {
         });
     }
 
-    // ── Language Select Change ─────────────────────────────────────────────────
+       // ── Language Select Change & Mobile Menu ─────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
+        
+        // ── Mobile "More" Dropdown Menu ──────────────────────────────────────────
+        const moreBtn = document.getElementById('moreBtn');
+        const dropdown = document.getElementById('mobileDropdown');
+        const snippetsBtn = document.getElementById('snippetsBtn');
+        const newSessionBtn = document.getElementById('newSessionBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        const navLeft = document.querySelector('.nav-left');
+        const navRight = document.querySelector('.nav-right');
+        const runCodeBtn = document.getElementById('runCodeBtn');
+
+        function handleResponsiveMenu() {
+            if (window.innerWidth <= 768) {
+                if (snippetsBtn) dropdown.appendChild(snippetsBtn);
+                if (newSessionBtn) dropdown.appendChild(newSessionBtn);
+                if (themeToggle) dropdown.appendChild(themeToggle);
+            } else {
+                if (snippetsBtn) navLeft.insertBefore(snippetsBtn, document.querySelector('.logo'));
+                if (newSessionBtn) navRight.insertBefore(newSessionBtn, runCodeBtn);
+                if (themeToggle) navRight.insertBefore(themeToggle, document.getElementById('settingsBtn'));
+                
+                if (dropdown) dropdown.classList.remove('show');
+                if (moreBtn) moreBtn.textContent = '⋮';
+            }
+        }
+
+        window.addEventListener('resize', handleResponsiveMenu);
+        handleResponsiveMenu(); // Run on load
+
+        if (moreBtn && dropdown) {
+            moreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                moreBtn.textContent = dropdown.classList.contains('show') ? '✕' : '⋮';
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (dropdown && dropdown.classList.contains('show') && !dropdown.contains(e.target) && e.target !== moreBtn) {
+                dropdown.classList.remove('show');
+                moreBtn.textContent = '⋮';
+            }
+        });
+
+        // ── Language Select
         const langSelect = document.getElementById('languageSelect');
         if (langSelect) {
             langSelect.addEventListener('change', function () {
@@ -503,6 +578,15 @@ int main() {
                 }
             });
         }
+
+        // ── iOS Push Back Drawer Observer ────────────────────────────────────────
+        const observer = new MutationObserver(() => {
+            const anyOpen = document.querySelector('.snippets-overlay.active, .history-overlay.active, .settings-overlay.active');
+            document.body.classList.toggle('drawer-open', !!anyOpen);
+        });
+        document.querySelectorAll('.snippets-overlay, .history-overlay, .settings-overlay').forEach(el => {
+            if(el) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+        });
     });
 
         // ── Mobile Panel Toggle ───────────────────────────────────────────────────
@@ -534,17 +618,25 @@ int main() {
 
     // ── Force Monaco Editor to Recalculate Its Size ──────────────────────────
     function forceEditorLayout() {
-        if (!editor) return;
+    if (!editor) return;
 
-        // Call layout multiple times over 500ms to catch any CSS transitions
-        [50, 150, 300, 500].forEach(function (delay) {
-            setTimeout(function () {
-                if (editor) {
-                    editor.layout();
-                }
-            }, delay);
-        });
-    }
+    const editorContainer = document.getElementById('editorContainer');
+
+    // Monaco needs the actual container dimensions after mobile panels,
+    // CSS Grid, or responsive layouts have finished rendering.
+    [50, 150, 300, 500].forEach(function (delay) {
+        setTimeout(function () {
+            if (!editor || !editorContainer) return;
+
+            const width = editorContainer.clientWidth;
+            const height = editorContainer.clientHeight;
+
+            if (width > 0 && height > 0) {
+                editor.layout({ width: width, height: height });
+            }
+        }, delay);
+    });
+}
 
     // Also expose globally so other scripts can trigger it
     window.forceEditorLayout = forceEditorLayout;
@@ -701,6 +793,7 @@ int main() {
             const timeBadge     = document.getElementById('timeBadge');
             if (providerBadge) providerBadge.style.display = 'none';
             if (timeBadge)     timeBadge.style.display = 'none';
+            hideRateLimitStatus();
 
             // ── Reset Session ID ──────────────────────────────────────────────
             window.currentSessionId = null;
@@ -907,6 +1000,10 @@ int main() {
 
         // Show loading state
         setLoadingState(true);
+        // ADD THIS: Switch to results panel immediately on mobile
+    if (window.innerWidth <= 768) {
+        switchToResultsPanel();
+    }
 
         // Make API call
         fetch('/api/' + currentMode, {
@@ -1050,7 +1147,130 @@ int main() {
         const section = titleEl.closest('.result-section');
         section.classList.toggle('collapsed');
     };
-    
+    // ── Groq Rate-Limit Status ─────────────────────────────────────────────────
+
+function parseGroqResetDuration(value) {
+    if (!value) return 0;
+
+    const text = String(value).trim();
+    let totalMs = 0;
+
+    const hours = text.match(/(\d+(?:\.\d+)?)h/);
+    const minutes = text.match(/(\d+(?:\.\d+)?)m(?!s)/);
+    const seconds = text.match(/(\d+(?:\.\d+)?)s/);
+    const milliseconds = text.match(/(\d+(?:\.\d+)?)ms/);
+
+    if (hours) totalMs += parseFloat(hours[1]) * 60 * 60 * 1000;
+    if (minutes) totalMs += parseFloat(minutes[1]) * 60 * 1000;
+    if (seconds) totalMs += parseFloat(seconds[1]) * 1000;
+    if (milliseconds) totalMs += parseFloat(milliseconds[1]);
+
+    return totalMs;
+}
+
+function formatGroqTokenCount(value) {
+    const amount = Number.parseInt(value, 10);
+
+    if (!Number.isFinite(amount)) return null;
+    if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
+    if (amount >= 1000) return (amount / 1000).toFixed(1).replace('.0', '') + 'K';
+
+    return String(amount);
+}
+
+function formatGroqResetTime(milliseconds) {
+    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+
+    if (totalSeconds >= 3600) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        return hours + 'h ' + minutes + 'm';
+    }
+
+    if (totalSeconds >= 60) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return minutes + 'm ' + seconds + 's';
+    }
+
+    return totalSeconds + 's';
+}
+
+function hideRateLimitStatus() {
+    const status = document.getElementById('rateLimitStatus');
+
+    if (rateLimitCountdownTimer) {
+        window.clearInterval(rateLimitCountdownTimer);
+        rateLimitCountdownTimer = null;
+    }
+
+    if (status) {
+        status.style.display = 'none';
+        status.textContent = '';
+        status.classList.remove('is-low', 'is-critical');
+    }
+}
+
+function renderRateLimitStatus(rateLimit) {
+    const status = document.getElementById('rateLimitStatus');
+
+    hideRateLimitStatus();
+
+    if (!status || !rateLimit || !rateLimit.tokens_remaining) {
+        return;
+    }
+
+    const remaining = Number.parseInt(rateLimit.tokens_remaining, 10);
+    const limit = Number.parseInt(rateLimit.tokens_limit, 10);
+    const formattedTokens = formatGroqTokenCount(rateLimit.tokens_remaining);
+
+    if (!Number.isFinite(remaining) || !formattedTokens) {
+        return;
+    }
+
+    const resetDuration = parseGroqResetDuration(rateLimit.tokens_reset);
+    const resetAt = Date.now() + resetDuration;
+
+    status.style.display = 'inline-flex';
+    status.title = 'Current Groq token rate-limit window. It updates after each analysis.';
+
+    if (Number.isFinite(limit) && limit > 0) {
+        const remainingRatio = remaining / limit;
+
+        if (remainingRatio <= 0.05) {
+            status.classList.add('is-critical');
+        } else if (remainingRatio <= 0.20) {
+            status.classList.add('is-low');
+        }
+    }
+
+    function updateStatusText() {
+        const timeLeft = Math.max(0, resetAt - Date.now());
+
+        if (resetDuration <= 0) {
+            status.textContent = formattedTokens + ' tokens left';
+            return;
+        }
+
+        if (timeLeft <= 0) {
+            status.textContent = 'Limit reset. Run analysis to update.';
+
+            if (rateLimitCountdownTimer) {
+                window.clearInterval(rateLimitCountdownTimer);
+                rateLimitCountdownTimer = null;
+            }
+
+            return;
+        }
+
+        status.textContent =
+            formattedTokens + ' tokens left · resets in ' +
+            formatGroqResetTime(timeLeft);
+    }
+
+    updateStatusText();
+    rateLimitCountdownTimer = window.setInterval(updateStatusText, 1000);
+}
     // ── Render Results ────────────────────────────────────────────────────────
     function renderResults(data) {
         const output = document.getElementById('resultsOutput');
@@ -1067,6 +1287,7 @@ int main() {
 
         timeBadge.textContent = data.response_time + 's';
         timeBadge.style.display = 'inline-block';
+        renderRateLimitStatus(data.rate_limit);
 
         copyBtn.style.display = 'flex';
 
@@ -1098,6 +1319,14 @@ int main() {
 
         output.innerHTML = html;
         showView('results');
+        
+        // ── Apply ChatGPT Streaming Effect ──
+        const elements = output.querySelectorAll('.quality-score-card, .result-summary, .result-section-title, .line-card, .bug-card, .complexity-grid, .fixed-code-section');
+        elements.forEach(function(el, index) {
+            el.classList.add('stream-animate');
+            // Stagger the animation so they appear one after another (150ms apart)
+            el.style.animationDelay = (index * 0.12) + 's';
+        });
 
         // Attach copy code button listeners
         attachCopyCodeButtons();

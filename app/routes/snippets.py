@@ -6,6 +6,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from ..models.code_session import Snippet
 from ..extensions import db
+from flask_login import current_user, login_required
 
 snippets_bp = Blueprint("snippets", __name__)
 
@@ -16,7 +17,7 @@ def list_snippets():
     category = request.args.get("category")
     search   = request.args.get("search", "").strip()
 
-    query = Snippet.query.order_by(Snippet.updated_at.desc())
+    query = Snippet.query.filter_by(user_id=current_user.id).order_by(Snippet.updated_at.desc())
 
     if category and category != "all":
         query = query.filter(Snippet.category == category)
@@ -65,6 +66,7 @@ def create_snippet():
             language    = language,
             category    = category,
             description = description,
+            user_id = current_user.id
         )
         db.session.add(snippet)
         db.session.commit()

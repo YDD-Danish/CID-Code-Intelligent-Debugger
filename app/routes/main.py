@@ -4,17 +4,21 @@
 # ─────────────────────────────────────────────────────────────────────────────
 import os
 from flask import Blueprint, render_template, jsonify, current_app, request
+from flask_login import login_required
 
 main_bp = Blueprint("main", __name__)
 
 
 @main_bp.route("/")
+@login_required
 def index():
     """Serve the main C.I.D application page."""
     is_production = bool(os.environ.get("RENDER", False))
     return render_template("index.html", is_production=is_production)
 
-
+@main_bp.route("/login")
+def login_page():
+    return render_template("login.html")
 @main_bp.route("/share/<int:session_id>")
 def share_view(session_id):
     """
