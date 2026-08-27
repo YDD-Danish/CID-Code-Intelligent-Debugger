@@ -2833,11 +2833,6 @@ body.compact-mode .settings-section {
 
 @media (max-width: 480px) {
 
-    /* ── Hide samples on tiny screens ─────────────────────────────────────── */
-    .samples-bar {
-        display: none;
-    }
-
     .results-container {
         padding: 12px;
     }

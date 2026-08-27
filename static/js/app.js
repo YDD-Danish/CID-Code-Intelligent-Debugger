@@ -363,21 +363,32 @@ int main() {
                 }
             });
 
-            // When editor content changes, check if empty
-            editor.onDidChangeModelContent(function () {
-                const content = editor.getValue().trim();
+        // When editor content changes, check if empty and update stats
+        editor.onDidChangeModelContent(function () {
+            const content = editor.getValue().trim();
+            
+            if (content === '' && !editor.hasTextFocus()) {
+                editor.setValue(placeholderText);
+                window.isPlaceholder = true;
+            }
+            if (content !== '' && content !== placeholderText.trim()) {
+                window.isPlaceholder = false;
+            }
+            
+            updateStatsBar();
 
-                // If user deleted everything, show placeholder again
-                if (content === '' && !editor.hasTextFocus()) {
-                    editor.setValue(placeholderText);
-                    window.isPlaceholder = true;
+            // ── Auto-hide Samples Bar (Mobile UX) ──
+            const samplesBar = document.querySelector('.samples-bar');
+            if (samplesBar) {
+                const lines = editor.getModel().getLineCount();
+                // Hide if user wrote 3+ lines or pasted code
+                if (!window.isPlaceholder && (lines >= 3 || content.length > 50)) {
+                    samplesBar.style.display = 'none';
+                } else {
+                    samplesBar.style.display = 'block';
                 }
-
-                // If user typed something, mark placeholder as gone
-                if (content !== '' && content !== placeholderText.trim()) {
-                    window.isPlaceholder = false;
-                }
-            });
+            }
+        });
 
             // When user clicks away from editor and it is empty, restore placeholder
             editor.onDidBlurEditorText(function () {
