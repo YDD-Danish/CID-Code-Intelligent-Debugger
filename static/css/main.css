@@ -4254,19 +4254,30 @@ body.no-logo-animation .logo-magnifier {
 
 @media (max-width: 768px) {
     /* Sticky bottom Analyse button on mobile */
+       /* Sticky bottom Analyse button on mobile */
     #codePanel {
         position: relative;
-        padding-bottom: 70px; /* Room for the button */
+        /* Removed the padding-bottom that was failing on mobile */
     }
+    
+    /* This creates a physical 75px invisible block to push the samples bar UP */
+    #codePanel::after {
+        content: '';
+        display: block;
+        min-height: 75px;
+        width: 100%;
+        flex-shrink: 0;
+    }
+    
     .analyse-btn {
         position: fixed;
         bottom: 12px;
         left: 12px;
         right: 12px;
+        width: calc(100% - 24px);
         margin: 0;
         z-index: 50;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        /* Removed width, let left/right anchor it perfectly */
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 }
 
