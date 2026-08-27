@@ -24,7 +24,7 @@ from .language_detector import detect_language
 
 # ── Model Settings ────────────────────────────────────────────────────────────
 
-GROQ_MODEL  = "llama-3.1-8b-instant"
+GROQ_MODEL  = "llama3-8b-8192"
 MAX_TOKENS  = 4096
 TEMPERATURE = 0.1
 RESPONSE_CACHE = {}
