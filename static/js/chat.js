@@ -1,6 +1,6 @@
 // static/js/chat.js
 // ─────────────────────────────────────────────────────────────────────────────
-// C.I.D — Chat Follow-up Interface
+// C.I.D — Chat Follow-up Interface (multi-turn)
 // ─────────────────────────────────────────────────────────────────────────────
 
 (function () {
@@ -17,6 +17,30 @@
 
         if (!toggleBtn || !section) return;
 
+        // ── Conversation Memory ─────────────────────────────────────────────
+        // The last 10 question/answer pairs of the current conversation.
+        // Reset automatically when the editor's code changes (new session,
+        // loaded snippet, pasted new code) so the model never mixes up
+        // two different programs.
+        const MAX_HISTORY_TURNS = 10;
+        let chatHistory = [];      // [{ question: "...", answer: "..." }, ...]
+        let historyCodeKey = null; // the code text this history belongs to
+
+        function currentHistoryFor(code) {
+            if (code !== historyCodeKey) {
+                chatHistory = [];
+                historyCodeKey = code;
+            }
+            return chatHistory;
+        }
+
+        function rememberTurn(question, answer) {
+            chatHistory.push({ question: question, answer: answer });
+            if (chatHistory.length > MAX_HISTORY_TURNS) {
+                chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS);
+            }
+        }
+
         // ── Toggle Chat ───────────────────────────────────────────────────────
         toggleBtn.addEventListener('click', function () {
             section.style.display = section.style.display === 'none' ? 'block' : 'none';
@@ -30,7 +54,7 @@
             section.style.display = 'none';
         });
 
-        // ── Auto Resize Textarea ─────────────────────────────────────────────
+        // ── Auto Resize Textarea ──────────────────────────────────────────────
         input.addEventListener('input', function () {
             input.style.height = 'auto';
             input.style.height = Math.min(input.scrollHeight, 100) + 'px';
@@ -62,6 +86,7 @@
             }
 
             const language = document.getElementById('languageSelect').value;
+            const history  = currentHistoryFor(code);
 
             // Add user message
             addMessage(question, 'user');
@@ -74,14 +99,15 @@
             // Disable send button
             sendBtn.disabled = true;
 
-            // Call chat endpoint
+            // Call chat endpoint (with conversation history)
             fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     code:     code,
                     question: question,
-                    language: language
+                    language: language,
+                    history:  history
                 })
             })
             .then(function (r) { return r.json(); })
@@ -89,8 +115,9 @@
                 thinking.remove();
                 sendBtn.disabled = false;
 
-                if (data.success) {
+                if (data.success && data.answer) {
                     addMessage(data.answer, 'ai');
+                    rememberTurn(question, data.answer);
                 } else {
                     addMessage('Sorry, I could not answer that. ' + (data.error || ''), 'ai');
                 }

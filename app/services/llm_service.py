@@ -223,3 +223,29 @@ def _build_prompt(
             f"Unknown mode: {mode}. "
             f"Must be explain, debug, optimize, or security."
         )
+        
+    # ── Multi-turn Chat Call ─────────────────────────────────────────────────────
+
+def _call_groq_chat(messages, api_key):
+    """
+    Send a multi-turn chat conversation to Groq.
+
+    Args:
+        messages: full conversation list in OpenAI format
+                  [{"role": "system"|"user"|"assistant", "content": "..."}, ...]
+        api_key:  Groq API key
+
+    Returns:
+        The model's reply as a plain string.
+    """
+    client = Groq(api_key=api_key)
+
+    raw_response = client.chat.completions.with_raw_response.create(
+        model=GROQ_MODEL,
+        messages=messages,
+        temperature=0.4,
+        max_tokens=MAX_TOKENS,
+    )
+
+    response = raw_response.parse()
+    return response.choices[0].message.content

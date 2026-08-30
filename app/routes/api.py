@@ -500,12 +500,16 @@ def run_code():
 
 # ── Route: Chat Follow-up ──────────────────────────────────────────────────
 
+MAX_CHAT_HISTORY_TURNS = 10  # how many past Q&A pairs the model can see
+
 @api_bp.route("/chat", methods=["POST"])
 def chat_followup():
     """
     Handle follow-up questions about previously analyzed code.
+    Accepts an optional "history" list so the model remembers the
+    earlier questions and answers in the conversation.
     """
-    from ..services.llm_service import _call_groq
+    from ..services.llm_service import _call_groq_chat
 
     data = request.get_json(silent=True)
     if data is None:
@@ -514,6 +518,7 @@ def chat_followup():
     code     = data.get("code", "").strip()
     question = data.get("question", "").strip()
     language = data.get("language", "auto")
+    history  = data.get("history", [])
 
     if not question:
         return jsonify({"success": False, "error": "No question provided"}), 400
@@ -521,47 +526,60 @@ def chat_followup():
     if len(question) > 500:
         return jsonify({
             "success": False,
-            "error": "Question too long (max 500 chars)"
+            "error":   "Question too long (max 500 chars)"
         }), 400
 
-    # Build the prompt using string concatenation to avoid quote issues
-    prompt = (
+    # ── Sanitize history (keep only valid question/answer pairs, last N) ─────
+    clean_history = []
+    if isinstance(history, list):
+        for turn in history[-MAX_CHAT_HISTORY_TURNS:]:
+            if isinstance(turn, dict):
+                q = str(turn.get("question", "")).strip()[:500]
+                a = str(turn.get("answer", "")).strip()[:2000]
+                if q and a:
+                    clean_history.append({"question": q, "answer": a})
+
+    # ── Build the conversation ────────────────────────────────────────────────
+    # The code lives in the system message (sent once), and the earlier
+    # question/answer pairs from the history are included so the model
+    # understands what was already discussed.
+    system_msg = (
         "You are C.I.D, a helpful code assistant.\n"
-        "The user is asking a follow-up question about their code.\n\n"
+        "The user is asking follow-up questions about their code.\n\n"
         "THEIR CODE (" + language + "):\n"
         + code + "\n\n"
-        "THEIR QUESTION:\n"
-        + question + "\n\n"
         "INSTRUCTIONS:\n"
         "- Answer clearly and concisely (2-4 sentences maximum)\n"
         "- Use plain English, avoid jargon unless necessary\n"
         "- If asking about a specific line or concept, be direct\n"
         "- If asking for alternatives, give one clear suggestion\n"
+        "- If the user refers to something you answered earlier, "
+        "use the conversation history to understand the context\n"
         "- Do NOT respond with JSON, just answer naturally\n"
         "- Keep response under 200 words"
     )
 
+    messages = [{"role": "system", "content": system_msg}]
+    for turn in clean_history:
+        messages.append({"role": "user", "content": turn["question"]})
+        messages.append({"role": "assistant", "content": turn["answer"]})
+    messages.append({"role": "user", "content": question})
+
     try:
         groq_key = current_app.config.get("GROQ_API_KEY")
         if not groq_key:
-            return jsonify({
-                "success": False,
-                "error": "GROQ API key not configured"
-            }), 500
+            return jsonify({"success": False, "error": "GROQ_API key not configured"}), 500
 
-        response = _call_groq(prompt, groq_key, expect_json=False)
+        response = _call_groq_chat(messages, groq_key)
 
         return jsonify({
             "success": True,
             "answer":  response.strip(),
-        }), 200
+        })
 
     except Exception as e:
         current_app.logger.error(f"Chat error: {e}")
-        return jsonify({
-            "success": False,
-            "error":   "Chat failed: " + str(e)
-        }), 500
+        return jsonify({"success": False, "error": "Chat failed: " + str(e)}), 500
 
 # ── Route: Export Analysis as PDF ──────────────────────────────────────────
 
