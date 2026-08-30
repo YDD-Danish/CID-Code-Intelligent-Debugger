@@ -33,17 +33,14 @@ def create_app(config_name: str = None) -> Flask:
     config_class = config_map.get(config_name, config_map["development"])
     app.config.from_object(config_class)
 
-    # ── Fix Database Path ─────────────────────────────────────────────────────
-    # Force absolute path for SQLite so it always finds the database folder
-    # regardless of where python is called from
-    db_folder = os.path.join(BASE_DIR, "database")
-    db_file   = os.path.join(db_folder, "cid.db")
-
-    # Create the database folder if it does not exist
-    os.makedirs(db_folder, exist_ok=True)
-
-    # Override the database URI with the absolute path
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_file}"
+    # ── Database ─────────────────────────────────────────────────────────────
+    # If DATABASE_URL is set (Render/Neon), config.py already points to
+    # Postgres — keep it. Only fall back to local SQLite for local dev.
+    if not os.environ.get("DATABASE_URL"):
+        db_folder = os.path.join(BASE_DIR, "database")
+        db_file   = os.path.join(db_folder, "cid.db")
+        os.makedirs(db_folder, exist_ok=True)
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_file}".replace("\\", "/")
 
     # ── Fix Rate Limiter Storage Warning ──────────────────────────────────────
     # Tell Flask-Limiter to use memory storage explicitly
@@ -101,25 +98,25 @@ def _print_banner(app: Flask, config_name: str) -> None:
     )
 
     banner = f"""
-╔══════════════════════════════════════════════════════════════╗
+╔══════════════════════════════════════════════════════════╗
 ║                                                              ║
 ║     ██████╗   ██╗   ██████╗                                  ║
-║    ██╔════╝   ██║   ██╔══██╗                                 ║
-║    ██║        ██║   ██║  ██║                                  ║
-║    ██║        ██║   ██║  ██║                                  ║
-║    ╚██████╗   ██║   ██████╔╝                                  ║
+║    ██╔════╝   ██║   ██╔══██╗                                ║
+║    ██║        ██║   ██║  ██║                                 ║
+║    ██║        ██║   ██║   ██║                                ║
+║    ╚██████╗   ██║   ██████╗╝                                 ║
 ║     ╚═════╝   ╚═╝   ╚═════╝                                  ║
 ║                                                              ║
 ║    Code Intelligent Debugger  v{app.config.get("APP_VERSION", "1.0.0")}                   ║
 ║    Built by {app.config.get("APP_AUTHOR", "Danish Khan"):<49}║
 ║                                                              ║
-╠══════════════════════════════════════════════════════════════╣
+╠══════════════════════════════════════════════════════════╣
 ║  Environment  :  {config_name:<43}║
 ║  Debug Mode   :  {str(app.config["DEBUG"]):<43}║
 ║  Groq AI      :  {groq_status:<43}║
 ║  LLM Model    :  {"groq/compound-mini":<43}║
 ║  URL          :  http://localhost:5000                       ║
-╚══════════════════════════════════════════════════════════════╝
+╚══════════════════════════════════════════════════════════╝
 """
     print(banner)
 
@@ -144,7 +141,7 @@ def register_error_handlers(app: Flask) -> None:
         return jsonify({
             "success": False,
             "error":   "Not Found",
-            "message": "The endpoint you requested does not exist"
+            "message": "The endpoint you requested was not found"
         }), 404
 
     @app.errorhandler(429)
