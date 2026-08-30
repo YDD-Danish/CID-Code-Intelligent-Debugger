@@ -35,6 +35,6 @@ colorama==0.4.6
 
 gunicorn
 
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
 
 flask-login==0.6.3
